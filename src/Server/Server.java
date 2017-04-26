@@ -34,7 +34,7 @@ public class Server implements Runnable{
 //			//allow for starting of the server.
 //			
 //		}
-		bb = new BoundedBuffer(5);
+		bb = new BoundedBuffer(500);
 
 		
 	}
@@ -54,20 +54,18 @@ public class Server implements Runnable{
 		//TODO: Need to start two threads here; One for the Player Fetching - One for GUI Updates.
 		
 		ExecutorService e = Executors.newFixedThreadPool(8);	
+
 		e.submit(new Thread(new testProducer(bb), "p1"));
 		e.submit(new Thread(new testProducer(bb), "p2"));
 		e.submit(new Thread(new testProducer(bb), "p3"));
 		e.submit(new Thread(new testProducer(bb), "p4"));
+		e.submit(new Thread(new testProducer(bb), "p5"));
+		e.submit(new Thread(new testProducer(bb), "p6"));
 
 		e.submit(new Thread(new testConsumer(bb), "c1"));
 		e.submit(new Thread(new testConsumer(bb), "c2"));
-		
-		//		p1 = new Thread(new testProducer(bb));
-//		p1.start();
-//		p2 = new Thread(new testProducer(bb));
-//		
-//		c1 = new Thread(new testConsumer(bb));
-//		c1.start();
+		e.submit(new Thread(new testConsumer(bb), "c3"));
+		e.submit(new Thread(new testConsumer(bb), "c4"));
 
 	}
 

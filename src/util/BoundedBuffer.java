@@ -19,7 +19,7 @@ public class BoundedBuffer {
 	
 	public BoundedBuffer(int initSize) {
 		this.maxSize = initSize;
-		dataStorage = Collections.synchronizedList(new ArrayList<MovePacket>(initSize));
+		dataStorage = new ArrayList<MovePacket>(initSize);
 	}
 	/**
 	 * Get a MovePacket.java from the BoundedBuffer.
@@ -36,6 +36,8 @@ public class BoundedBuffer {
 		
 		this.currentPackets--;
 		System.out.println("A packet is about to be removed from the buffer by: " + Thread.currentThread().getName() + " current size: " + this.currentPackets);
+		
+		//Note - This notifyAll wakes threads but returns first before any other thread can interrupt the return.
 		this.notifyAll();
 		return this.dataStorage.remove(0);
 	}
@@ -66,7 +68,9 @@ public class BoundedBuffer {
 	}
 	public void setMaxSize(int nMaxSize) {
 		this.maxSize = nMaxSize;
-		List<MovePacket> nList = Collections.synchronizedList(new ArrayList<MovePacket>(nMaxSize));
+		//>No dynamic arrays in 2017
+		//are you even trying Java?
+		List<MovePacket> nList = new ArrayList<MovePacket>(nMaxSize);
 
 		for(int i = 0; i < dataStorage.size(); i++) {
 			nList.add(dataStorage.remove(i));
