@@ -52,7 +52,7 @@ public class Server implements Runnable{
 		 * 	broadcast to all players
 		 */
 		//TODO: Need to start two threads here; One for the Player Fetching - One for GUI Updates.
-		
+		/*
 		ExecutorService e = Executors.newFixedThreadPool(8);	
 
 		e.submit(new Thread(new testProducer(bb), "p1"));
@@ -66,7 +66,10 @@ public class Server implements Runnable{
 		e.submit(new Thread(new testConsumer(bb), "c2"));
 		e.submit(new Thread(new testConsumer(bb), "c3"));
 		e.submit(new Thread(new testConsumer(bb), "c4"));
-
+        */
+        Game theGame = new Game(bb);
+        theGame.init();
+        theGame.mainLoop();
 	}
 
 }

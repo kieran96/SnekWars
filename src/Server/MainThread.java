@@ -17,6 +17,7 @@ public class MainThread {
 		
 		Thread mainTester = new Thread(new Server());
 		mainTester.start();
+        
 	}
 
 }
