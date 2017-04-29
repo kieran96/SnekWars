@@ -3,12 +3,21 @@ package util;
 public class MovePacket {
 	private int[][] moveLocation;
 	private int[][] theSnake;
+	
+	int xmove;
+	int ymove;
+	
 	public MovePacket() {
 		
 	}
 	public MovePacket(int[][] mL, int[][] s) {
 		this.moveLocation = mL;
 		this.theSnake = s;
+	}
+	public MovePacket(int[][] snake, int xmove, int ymove) {
+		this.theSnake = snake;
+		this.xmove = xmove;
+		this.ymove = ymove;
 	}
 	public MovePacket(MovePacket mp) {
 		this.moveLocation = mp.getMoveLocation();
@@ -20,6 +29,12 @@ public class MovePacket {
 	}
 	public int[][] getTheSnake() {
 		return theSnake;
+	}
+	public int getXMove() {
+		return xmove;
+	}
+	public int getYMove() {
+		return ymove;
 	}
 	@Override
 	public String toString() {
