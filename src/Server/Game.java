@@ -93,7 +93,11 @@ public class Game implements KeyListener, WindowListener {
 			if(!paused && !game_over)
 			{
 				direction = next_direction;
-				moveSnake();
+				try {
+					moveSnake();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 			renderGame();
 			cycleTime = System.currentTimeMillis() - cycleTime;
@@ -202,7 +206,7 @@ public class Game implements KeyListener, WindowListener {
 		}
 		return score;
 	}
-	private void moveSnake() {
+	private void moveSnake() throws InterruptedException {
 		if (direction < 0) {
 			return;
 		}
@@ -212,26 +216,26 @@ public class Game implements KeyListener, WindowListener {
 		case UP:
 			xmove = 0;
 			ymove = -1;
-			MovePacket up = new MovePacket([snake[0][0]][snake[0][1]], xmove, ymove);
+			MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
 			bb.put(up);
 			break;
 		case DOWN:
 			xmove = 0;
 			ymove = 1;
-            MovePacket down = new MovePacket([[snake[0][0]][snake[0][1]], xmove, ymove);
+            MovePacket down = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
             bb.put(down);
 			break;
 		case RIGHT:
 			xmove = 1;
 			ymove = 0;
-            MovePacket right = new MovePacket([[snake[0][0]][snake[0][1]], xmove, ymove);
+            MovePacket right = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
             bb.put(right);
 			break;
 		case LEFT:
 			xmove = -1;
 			ymove = 0;
-            MovePacket down = new MovePacket([[snake[0][0]][snake[0][1]], xmove, ymove);
-            bb.put(down);
+            MovePacket left = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+            bb.put(left);
 			break;
 		default:
 			xmove = 0;
