@@ -39,8 +39,24 @@ public class Server implements Runnable{
 		
 	}
 	
+	public Thread[] getPlayers() {
+		Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+		Thread[] threadArray = threadSet.toArray(new Thread[threadSet.size()]);
+		return threadArray;
+	}
+	
 	@Override
 	public void run() {
+		//while (true) {
+		System.out.println("thread:"+Thread.activeCount());
+		Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+		Thread[] threadArray = threadSet.toArray(new Thread[threadSet.size()]);
+		//for (int i=0; i<Thread.activeCount(); i++) {
+		for (Thread t:getPlayers()) {
+			if (t.isAlive()) {
+				System.out.println("current thread:"+t);
+			}
+		}
 		/*
 		 * 	while not done
 		 * 	for each player in world
