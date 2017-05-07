@@ -17,7 +17,7 @@ public class testProducer implements Runnable {
 		
 		try {
 			while(true) { 
-				myB.put(new MovePacket(a, b));
+				myB.put(new MovePacket());
 				amount++;
 				if((amount % 10000000) == 0) {
 					System.out.println("Amount of times we have 'put' a packet: " + amount);

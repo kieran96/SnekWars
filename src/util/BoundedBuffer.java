@@ -2,9 +2,6 @@ package util;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Vector;
-
 /**
  * Working from the sudo code found here: 
  * https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem#Using_monitors
@@ -29,13 +26,14 @@ public class BoundedBuffer {
 	 */
 	public synchronized MovePacket get() throws InterruptedException {
 		while(isEmpty()) {
+			//System.out.println(Thread.currentThread().toString() + " is trying to access the BoundedBuffer, to get; but is empty . . .");
 			this.wait();
 		}
 		//They now have access to the array: We can actually do work.
 		
 		
 		this.currentPackets--;
-		System.out.println("A packet is about to be removed from the buffer by: " + Thread.currentThread().getName() + " current size: " + this.currentPackets);
+		//System.out.println("A packet is about to be removed from the buffer by: " + Thread.currentThread().getName() + " current size: " + this.currentPackets);
 		
 		//Note - This notifyAll wakes threads but returns first before any other thread can interrupt the return.
 		this.notifyAll();
@@ -43,6 +41,7 @@ public class BoundedBuffer {
 	}
 	public synchronized void put(MovePacket mp) throws InterruptedException {
 		while(this.currentPackets == this.maxSize) {
+			System.out.println(Thread.currentThread().toString() + " is trying to access the BoundedBuffer, to put; but is full. . .");
 			this.wait();
 		}
 		//They now have access to the array: We can actually do work.
@@ -50,15 +49,14 @@ public class BoundedBuffer {
 		
 		//Add the packet to the List (Should be adding to the end of the list).
 		this.currentPackets++;
-		System.out.println("A packet is about to be put into the buffer by: " + Thread.currentThread().getName() + " current size: " + this.currentPackets);
+		//System.out.println("A packet is about to be put into the buffer by: " + Thread.currentThread().getName() + " current size: " + this.currentPackets);
 		this.dataStorage.add(mp);
 		
 		//Notify everyone that is waiting
 		this.notifyAll();
 	}
-	private boolean isEmpty() {
-		if(this.currentPackets == 0) return true;
-		return false;
+	public boolean isEmpty() {
+		return ((this.currentPackets > 0) ? false : true);
 	}
 	public int getCurrentPacketsSize() {
 		return this.currentPackets;
@@ -66,16 +64,7 @@ public class BoundedBuffer {
 	public int getMaxSize() {
 		return this.maxSize;
 	}
-	public void setMaxSize(int nMaxSize) {
-		this.maxSize = nMaxSize;
-		//>No dynamic arrays in 2017
-		//are you even trying Java?
-		List<MovePacket> nList = new ArrayList<MovePacket>(nMaxSize);
-
-		for(int i = 0; i < dataStorage.size(); i++) {
-			nList.add(dataStorage.remove(i));
-		}
-		
-		dataStorage = nList;
+	public void setMaxSize(int newMaxSize) {
+		this.maxSize = newMaxSize;
 	}
 }

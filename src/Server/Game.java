@@ -216,26 +216,26 @@ public class Game implements KeyListener, WindowListener {
 		case UP:
 			xmove = 0;
 			ymove = -1;
-			MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-			bb.put(up);
+			//MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);			
+			//bb.put(up);
 			break;
 		case DOWN:
 			xmove = 0;
 			ymove = 1;
-            MovePacket down = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            bb.put(down);
+            //MovePacket down = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+            //bb.put(down);
 			break;
 		case RIGHT:
 			xmove = 1;
 			ymove = 0;
-            MovePacket right = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            bb.put(right);
+            //MovePacket right = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+            //bb.put(right);
 			break;
 		case LEFT:
 			xmove = -1;
 			ymove = 0;
-            MovePacket left = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            bb.put(left);
+            //MovePacket left = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+            //bb.put(left);
 			break;
 		default:
 			xmove = 0;
@@ -246,6 +246,10 @@ public class Game implements KeyListener, WindowListener {
 		int tempy = snake[0][1];
 		int fut_x = snake[0][0] + xmove;
 		int fut_y = snake[0][1] + ymove;
+		System.out.println(bb.isEmpty());
+		//theoretically, fire off consumer to free up BB and calculate moves.
+		
+		
 		/*
 		 * Commented code here states that if the snake leaves the screen; game over for that snake.
 		 */
@@ -336,8 +340,21 @@ public class Game implements KeyListener, WindowListener {
 	}
 	private void gameOver() {
 		game_over = true;
+		for(int i = 0;i<bb.getCurrentPacketsSize(); i++) {
+			try {
+				System.out.println(bb.get().toString());
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 	// / IMPLEMENTED FUNCTIONS
+	/*
+	 * TODO: Should be getting moved to a Snake.java function.
+	 * (non-Javadoc)
+	 * @see java.awt.event.KeyListener#keyPressed(java.awt.event.KeyEvent)
+	 */
 	public void keyPressed(KeyEvent ke) {
 		int code = ke.getKeyCode();
 		Dimension dim;

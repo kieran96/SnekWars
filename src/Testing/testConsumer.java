@@ -22,7 +22,6 @@ public class testConsumer implements Runnable {
 				//System.out.println("Got this packet from the Buffer: " + myB.get().toString());
 			}
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

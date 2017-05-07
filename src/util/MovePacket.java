@@ -1,8 +1,10 @@
 package util;
 
+import Server.Snake;
+
 public class MovePacket {
 	private int[][] moveLocation;
-	private int[][] theSnake;
+	private Snake theSnake;
 	
 	int xmove;
 	int ymove;
@@ -10,11 +12,11 @@ public class MovePacket {
 	public MovePacket() {
 		
 	}
-	public MovePacket(int[][] mL, int[][] s) {
+	public MovePacket(int[][] mL, Snake s) {
 		this.moveLocation = mL;
 		this.theSnake = s;
 	}
-	public MovePacket(int[][] snake, int xmove, int ymove) {
+	public MovePacket(Snake snake, int xmove, int ymove) {
 		this.theSnake = snake;
 		this.xmove = xmove;
 		this.ymove = ymove;
@@ -27,7 +29,7 @@ public class MovePacket {
 	public int[][] getMoveLocation() {
 		return moveLocation;
 	}
-	public int[][] getTheSnake() {
+	public Snake getTheSnake() {
 		return theSnake;
 	}
 	public int getXMove() {
@@ -39,14 +41,27 @@ public class MovePacket {
 	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
-		if(moveLocation != null) b.append(moveLocation.length);
-		if(theSnake != null) b.append(theSnake.length);
+		if(moveLocation != null) b.append("MoveLocation: " + moveLocation.length + " ");
+		if(theSnake != null) b.append("The Snake: " + theSnake.toString() + " ");
+		b.append("xmove: " + xmove + " ");
+		b.append("ymove: " + ymove);
 		return b.toString();
 	}
 	@Override
     public boolean equals(Object obj) {
-        
-		
-		return true;
+        if(this == null || obj == null) {
+        	return false;
+        }
+        if(!(obj instanceof MovePacket)) {
+        	return false;
+        }
+		MovePacket move = (MovePacket) obj;
+		if(move.getXMove() == this.getXMove() 
+				&& (move.getYMove() == this.getYMove())
+				&& (move.getMoveLocation() == this.getMoveLocation())
+				&& (move.getTheSnake() == this.getTheSnake())) {
+			return true;
+		}
+		return false;
     }
 }
