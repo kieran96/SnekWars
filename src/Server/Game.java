@@ -47,6 +47,9 @@ public class Game implements KeyListener, WindowListener {
 	private int next_direction = -1;
 	private int height = 600;
 	private int width = 600;
+	//Code to make sizeable game based on screensize
+	Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+	int screenSize = (int) (dim.height * 0.5);
 	private static int gameSize = 40;
 	private long speed = 300;
 	private Frame frame = null;
@@ -80,10 +83,10 @@ public class Game implements KeyListener, WindowListener {
 		c1.start();
 	}
 	public void init() {
-		frame.setSize(width + 7, height + 27);
+		frame.setSize(screenSize, screenSize);
 		frame.setResizable(false);
-		frame.setLocationByPlatform(true);
-		canvas.setSize(width + 7, height + 27);
+		frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
+		canvas.setSize(screenSize, screenSize);
 		frame.add(canvas);
 		canvas.addKeyListener(this);
 		frame.addWindowListener(this);
@@ -213,7 +216,7 @@ public class Game implements KeyListener, WindowListener {
 		}*/
 	}
 	private void renderGame() {
-		int gridUnit = height / gameSize;
+		int gridUnit = screenSize / gameSize;
 		canvas.paint(graph);
 		do {
 			do {
@@ -222,7 +225,7 @@ public class Game implements KeyListener, WindowListener {
 						RenderingHints.VALUE_ANTIALIAS_ON);
 				// Draw Background
 				graph.setColor(Color.WHITE);
-				graph.fillRect(0, 0, width, height);
+				graph.fillRect(0, 0, screenSize, screenSize);
 				// Draw snake, bonus ...
 				int gridCase = EMPTY;
 				for (int i = 0; i < gameSize; i++) {
@@ -262,14 +265,14 @@ public class Game implements KeyListener, WindowListener {
 						}
 					}
 				}
-				graph.setFont(new Font(Font.SANS_SERIF, Font.BOLD, height / 40));
+				graph.setFont(new Font(Font.SANS_SERIF, Font.BOLD, screenSize / 40));
 				if (game_over) {
 					graph.setColor(Color.RED);
-					graph.drawString("GAME OVER", height / 2 - 30, height / 2);
+					graph.drawString("GAME OVER", screenSize / 2 - 30, screenSize / 2);
 				}
 				else if (paused) {
 					graph.setColor(Color.RED);
-					graph.drawString("PAUSED", height / 2 - 30, height / 2);
+					graph.drawString("PAUSED", screenSize / 2 - 30, screenSize / 2);
 				}
 				graph.setColor(Color.BLACK);
 				graph.drawString("SCORE = " + getScore(), 10, 20);
