@@ -16,6 +16,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
@@ -47,7 +48,7 @@ public class Game implements KeyListener, WindowListener {
 	private int height = 600;
 	private int width = 600;
 	private static int gameSize = 40;
-	private long speed = 150;
+	private long speed = 300;
 	private Frame frame = null;
 	private Canvas canvas = null;
 	private Graphics graph = null;
@@ -101,6 +102,9 @@ public class Game implements KeyListener, WindowListener {
 	public void mainLoop() {
 		while (running) {
 			//work here
+			for (int i=0; i<snakeList.size(); i++) {
+				System.out.println("Array index("+i+")"+snakeList.get(i));
+			}
 			counter += 1;
 			cycleTime = System.currentTimeMillis();
 			System.out.println(counter);
@@ -111,14 +115,18 @@ public class Game implements KeyListener, WindowListener {
 				Server.createPlayer();
 			}*/
 			System.out.println(game_over);
-			if (counter == 10) {
+			//Spawn a new enemy snake every 10sec
+			if (counter%10 == 0) {
 				this.createPlayer();
-				//createSnake();
 			}
-			if (counter == 15) {
-				this.createPlayer();
-				//createSnake();
-			}
+			
+			//At 10sec mark spawn 20 snakes
+			/*if (counter == 10) {
+				for (int i=0; i<20; i++) {		
+					this.createPlayer();
+				}
+			}*/
+			
 			if (enemysnakeAlive == true) {
 				//System.out.println("moving left");
 			}
@@ -159,7 +167,7 @@ public class Game implements KeyListener, WindowListener {
 //		thread.setName("Thread-"+playerCount()+"");
 //		thread.start();
 
-		this.snakeList.add(new Snake(""+Server.playerCount()));
+		this.snakeList.add(new Snake(""+(snakeList.size()+1)));
 		
 		/*Thread thread = new Thread("Thread-"+playerCount()+"");
 		System.out.println("Created player:"+thread.getName());
@@ -190,7 +198,19 @@ public class Game implements KeyListener, WindowListener {
 		snake[0][0] = gameSize/2;
 		snake[0][1] = gameSize/2;
 		grid[gameSize/2][gameSize/2] = SNAKE_HEAD;
-		placeBonus(FOOD_BONUS);
+		/*for (int i=0; i<20;i++) {
+			placeBonus(FOOD_BONUS);
+		}*/
+		/*for(Snake snake : this.snakeList) {
+			for (int i = 0; i < gameSize * gameSize; i++) {
+				snake.enemysnake[i][0] = -1;
+				snake.enemysnake[i][1] = -1;
+			}
+			snake.enemysnake[0][0] = gameSize/2;
+			snake.enemysnake[0][1] = gameSize/2;
+			grid[gameSize/2][gameSize/2] = SNAKE_HEAD;
+			//placeBonus(FOOD_BONUS);
+		}*/
 	}
 	private void renderGame() {
 		int gridUnit = height / gameSize;
@@ -270,20 +290,59 @@ public class Game implements KeyListener, WindowListener {
 		}
 		return score;
 	}
-	/*private void moveenemySnake(int[][] snake) throws InterruptedException {
+
+	private void moveSnake() throws InterruptedException {
 		if (direction < 0) {
 			return;
 		}
 		int ymove = 0;
 		int xmove = 0;
+		switch (direction) {
+		case UP:
 			xmove = 0;
 			ymove = -1;
-			MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-			bb.put(up);
+			//MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+			//bb.put(up);
+			break;
+		case DOWN:
+			xmove = 0;
+			ymove = 1;
+            //MovePacket down = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+            //bb.put(down);
+			break;
+		case RIGHT:
+			xmove = 1;
+			ymove = 0;
+            //MovePacket right = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+            //bb.put(right);
+			break;
+		case LEFT:
+			xmove = -1;
+			ymove = 0;
+            //MovePacket left = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+            //bb.put(left);
+			break;
+		default:
+			xmove = 0;
+			ymove = 0;
+			break;
+		}
 		int tempx = snake[0][0];
 		int tempy = snake[0][1];
+		for (int h = 0; h<grid.length; h++) {
+			for (int k=0; k<grid.length; k++) {
+				System.out.print(grid[h][k]+" ");
+			}
+			System.out.println();
+		}
+	    //System.out.println("grid:"+Arrays.deepToString(grid));
+		System.out.println("temp_x:"+tempx);
+		System.out.println("temp_y:"+tempy);
 		int fut_x = snake[0][0] + xmove;
 		int fut_y = snake[0][1] + ymove;
+		System.out.println("direction:"+direction);
+		System.out.println("fut_x:"+fut_x);
+		System.out.println("fut_y:"+fut_y);
 		/*
 		 * Commented code here states that if the snake leaves the screen; game over for that snake.
 		 */
@@ -295,7 +354,7 @@ public class Game implements KeyListener, WindowListener {
 		/*
 		 * Code that handles when the snake reaches the side of the screen - move to other side.
 		 */
-		/*if(fut_x < 0)
+		if(fut_x < 0)
 			fut_x = gameSize - 1;
 		if(fut_y < 0)
 			fut_y = gameSize - 1;
@@ -362,125 +421,6 @@ public class Game implements KeyListener, WindowListener {
 			}
 			grow --;
 		}
-	}*/
-	private void moveSnake() throws InterruptedException {
-		if (direction < 0) {
-			return;
-		}
-		int ymove = 0;
-		int xmove = 0;
-		switch (direction) {
-		case UP:
-			xmove = 0;
-			ymove = -1;
-			//MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-			//bb.put(up);
-			break;
-		case DOWN:
-			xmove = 0;
-			ymove = 1;
-            //MovePacket down = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            //bb.put(down);
-			break;
-		case RIGHT:
-			xmove = 1;
-			ymove = 0;
-            //MovePacket right = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            //bb.put(right);
-			break;
-		case LEFT:
-			xmove = -1;
-			ymove = 0;
-            //MovePacket left = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            //bb.put(left);
-			break;
-		default:
-			xmove = 0;
-			ymove = 0;
-			break;
-		}
-		int tempx = snake[0][0];
-		int tempy = snake[0][1];
-		int fut_x = snake[0][0] + xmove;
-		int fut_y = snake[0][1] + ymove;
-		/*
-		 * Commented code here states that if the snake leaves the screen; game over for that snake.
-		 */
-		//		 if ((fut_x < 0) || (fut_y < 0) || (fut_x >= gameSize)
-		//		 || (fut_y >= gameSize)) {
-		//		 gameOver();
-		//		 return;
-		//		 }
-		/*
-		 * Code that handles when the snake reaches the side of the screen - move to other side.
-		 */
-		if(fut_x < 0)
-			fut_x = gameSize - 1;
-		if(fut_y < 0)
-			fut_y = gameSize - 1;
-		if(fut_x >= gameSize)
-			fut_x = 0;
-		if(fut_y >= gameSize)
-			fut_y = 0;
-
-
-		if (grid[fut_x][fut_y] == FOOD_BONUS)
-		{
-			grow ++;
-			placeBonus(FOOD_BONUS);
-		}
-		else if(grid[fut_x][fut_y] == BIG_FOOD_BONUS)
-			grow += 3;
-		snake[0][0] = fut_x;
-		snake[0][1] = fut_y;
-		if ((grid[snake[0][0]][snake[0][1]] == SNAKE)) {
-			//gameOver();
-			return;
-		}
-		grid[tempx][tempy] = EMPTY;
-		int snakex, snakey, i;
-		for (i = 1; i < gameSize * gameSize; i++) {
-			if ((snake[i][0] < 0) || (snake[i][1] < 0)) {
-				break;
-			}
-			grid[snake[i][0]][snake[i][1]] = EMPTY;
-			snakex = snake[i][0];
-			snakey = snake[i][1];
-			snake[i][0] = tempx;
-			snake[i][1] = tempy;
-			tempx = snakex;
-			tempy = snakey;
-		}
-		grid[snake[0][0]][snake[0][1]] = SNAKE_HEAD;
-		for (i = 1; i < gameSize * gameSize; i++) {
-			if ((snake[i][0] < 0) || (snake[i][1] < 0)) {
-				break;
-			}
-			grid[snake[i][0]][snake[i][1]] = SNAKE;
-		}
-		bonusTime --;
-		if (bonusTime == 0)
-		{
-			for (i = 0; i < gameSize; i++)
-			{
-				for (int j = 0; j < gameSize; j++)
-				{
-					if(grid[i][j]==BIG_FOOD_BONUS)
-						grid[i][j]=EMPTY;
-				}
-			}
-		}
-		if (grow > 0) {
-			snake[i][0] = tempx;
-			snake[i][1] = tempy;
-			grid[snake[i][0]][snake[i][1]] = SNAKE;
-			if(getScore()%10 == 0)
-			{
-				placeBonus(BIG_FOOD_BONUS);
-				bonusTime = 100;
-			}
-			grow --;
-		}
 	}
 	
 	public static int getGameSize() {
@@ -489,6 +429,15 @@ public class Game implements KeyListener, WindowListener {
 	public static void placeBonus(int bonus_type) {
 		int x = (int) (Math.random() * 1000) % gameSize;
 		int y = (int) (Math.random() * 1000) % gameSize;
+		if (grid[x][y] == EMPTY) {
+			grid[x][y] = bonus_type;
+			//grid[x+1][y] = bonus_type;
+			//grid[x+2][y] = bonus_type;
+		} else {
+			placeBonus(bonus_type);
+		}
+	}
+	public static void placeBonusAtLoc(int bonus_type, int x, int y) {
 		if (grid[x][y] == EMPTY) {
 			grid[x][y] = bonus_type;
 		} else {
