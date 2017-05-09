@@ -15,6 +15,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferStrategy;
+import java.util.Random;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import util.MovePacket;
@@ -33,19 +35,22 @@ public class Game implements KeyListener, WindowListener {
 	public final static int BIG_FOOD_BONUS = 3;
 	public final static int SNAKE = 4;
 	public final static int SNAKE_HEAD=5;
-	private int[][] grid = null;
-	private int[][] snake = null;
+	public static int[][] grid = null;
+	private static int[][] snake = null;
+	//private int[][] enemysnake = null;
+	private boolean enemysnakeAlive = false;
+	public int counter = 0;
 	private int direction = -1;
 	private int next_direction = -1;
 	private int height = 600;
 	private int width = 600;
-	private int gameSize = 40;
+	private static int gameSize = 40;
 	private long speed = 750;
 	private Frame frame = null;
 	private Canvas canvas = null;
 	private Graphics graph = null;
 	private BufferStrategy strategy = null;
-	private boolean game_over = false;
+	private static boolean game_over = false;
 	private boolean paused = false;
 	private int grow = 0;
 	private long cycleTime = 0;
@@ -65,7 +70,6 @@ public class Game implements KeyListener, WindowListener {
 		canvas = new Canvas();
 		grid = new int[gameSize][gameSize];
 		snake = new int[gameSize * gameSize][2];
-		
 	}
 	public void init() {
 		frame.setSize(width + 7, height + 27);
@@ -89,7 +93,37 @@ public class Game implements KeyListener, WindowListener {
 	}
 	public void mainLoop() {
 		while (running) {
+			//work here
+			counter += 1;
 			cycleTime = System.currentTimeMillis();
+			System.out.println(counter);
+			/*System.out.println(counter);
+			System.out.println("Thread:"+Thread.currentThread().getName());
+			System.out.println("Thread:"+Thread.activeCount());
+			if (counter == 10) {
+				Server.createPlayer();
+			}*/
+			if (counter == 10) {
+				Server.createPlayer();
+				//createSnake();
+			}
+			if (counter == 15) {
+				Server.createPlayer();
+				//createSnake();
+			}
+			if (enemysnakeAlive == true) {
+				//System.out.println("moving left");
+			}
+			//System.out.println("thread:"+Thread.activeCount());
+			Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+			Thread[] threadArray = threadSet.toArray(new Thread[threadSet.size()]);
+			//for (int i=0; i<Thread.activeCount(); i++) {
+			for (Thread t:Server.getPlayers()) {
+				if (t.isAlive() && t.toString().contains("thread")) {
+					//System.out.println("current thread:"+t.getName());
+				}
+			}
+			
 			if(!paused && !game_over)
 			{
 				direction = next_direction;
@@ -196,7 +230,7 @@ public class Game implements KeyListener, WindowListener {
 			Toolkit.getDefaultToolkit().sync();
 		} while (strategy.contentsLost());
 	}
-	private int getScore() {
+	public static int getScore() {
 		int score = 0;
 		for (int i = 0; i < gameSize * gameSize; i++) {
 			if ((snake[i][0] < 0) || (snake[i][1] < 0)) {
@@ -206,6 +240,99 @@ public class Game implements KeyListener, WindowListener {
 		}
 		return score;
 	}
+	/*private void moveenemySnake(int[][] snake) throws InterruptedException {
+		if (direction < 0) {
+			return;
+		}
+		int ymove = 0;
+		int xmove = 0;
+			xmove = 0;
+			ymove = -1;
+			MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+			bb.put(up);
+		int tempx = snake[0][0];
+		int tempy = snake[0][1];
+		int fut_x = snake[0][0] + xmove;
+		int fut_y = snake[0][1] + ymove;
+		/*
+		 * Commented code here states that if the snake leaves the screen; game over for that snake.
+		 */
+		//		 if ((fut_x < 0) || (fut_y < 0) || (fut_x >= gameSize)
+		//		 || (fut_y >= gameSize)) {
+		//		 gameOver();
+		//		 return;
+		//		 }
+		/*
+		 * Code that handles when the snake reaches the side of the screen - move to other side.
+		 */
+		/*if(fut_x < 0)
+			fut_x = gameSize - 1;
+		if(fut_y < 0)
+			fut_y = gameSize - 1;
+		if(fut_x >= gameSize)
+			fut_x = 0;
+		if(fut_y >= gameSize)
+			fut_y = 0;
+
+
+		if (grid[fut_x][fut_y] == FOOD_BONUS)
+		{
+			grow ++;
+			placeBonus(FOOD_BONUS);
+		}
+		else if(grid[fut_x][fut_y] == BIG_FOOD_BONUS)
+			grow += 3;
+		snake[0][0] = fut_x;
+		snake[0][1] = fut_y;
+		if ((grid[snake[0][0]][snake[0][1]] == SNAKE)) {
+			gameOver();
+			return;
+		}
+		grid[tempx][tempy] = EMPTY;
+		int snakex, snakey, i;
+		for (i = 1; i < gameSize * gameSize; i++) {
+			if ((snake[i][0] < 0) || (snake[i][1] < 0)) {
+				break;
+			}
+			grid[snake[i][0]][snake[i][1]] = EMPTY;
+			snakex = snake[i][0];
+			snakey = snake[i][1];
+			snake[i][0] = tempx;
+			snake[i][1] = tempy;
+			tempx = snakex;
+			tempy = snakey;
+		}
+		grid[snake[0][0]][snake[0][1]] = SNAKE_HEAD;
+		for (i = 1; i < gameSize * gameSize; i++) {
+			if ((snake[i][0] < 0) || (snake[i][1] < 0)) {
+				break;
+			}
+			grid[snake[i][0]][snake[i][1]] = SNAKE;
+		}
+		bonusTime --;
+		if (bonusTime == 0)
+		{
+			for (i = 0; i < gameSize; i++)
+			{
+				for (int j = 0; j < gameSize; j++)
+				{
+					if(grid[i][j]==BIG_FOOD_BONUS)
+						grid[i][j]=EMPTY;
+				}
+			}
+		}
+		if (grow > 0) {
+			snake[i][0] = tempx;
+			snake[i][1] = tempy;
+			grid[snake[i][0]][snake[i][1]] = SNAKE;
+			if(getScore()%10 == 0)
+			{
+				placeBonus(BIG_FOOD_BONUS);
+				bonusTime = 100;
+			}
+			grow --;
+		}
+	}*/
 	private void moveSnake() throws InterruptedException {
 		if (direction < 0) {
 			return;
@@ -216,26 +343,26 @@ public class Game implements KeyListener, WindowListener {
 		case UP:
 			xmove = 0;
 			ymove = -1;
-			//MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);			
-			//bb.put(up);
+			MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+			bb.put(up);
 			break;
 		case DOWN:
 			xmove = 0;
 			ymove = 1;
-            //MovePacket down = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            //bb.put(down);
+            MovePacket down = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+            bb.put(down);
 			break;
 		case RIGHT:
 			xmove = 1;
 			ymove = 0;
-            //MovePacket right = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            //bb.put(right);
+            MovePacket right = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+            bb.put(right);
 			break;
 		case LEFT:
 			xmove = -1;
 			ymove = 0;
-            //MovePacket left = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            //bb.put(left);
+            MovePacket left = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+            bb.put(left);
 			break;
 		default:
 			xmove = 0;
@@ -246,10 +373,6 @@ public class Game implements KeyListener, WindowListener {
 		int tempy = snake[0][1];
 		int fut_x = snake[0][0] + xmove;
 		int fut_y = snake[0][1] + ymove;
-		System.out.println(bb.isEmpty());
-		//theoretically, fire off consumer to free up BB and calculate moves.
-		
-		
 		/*
 		 * Commented code here states that if the snake leaves the screen; game over for that snake.
 		 */
@@ -329,7 +452,11 @@ public class Game implements KeyListener, WindowListener {
 			grow --;
 		}
 	}
-	private void placeBonus(int bonus_type) {
+	
+	public static int getGameSize() {
+		return gameSize;
+	}
+	public static void placeBonus(int bonus_type) {
 		int x = (int) (Math.random() * 1000) % gameSize;
 		int y = (int) (Math.random() * 1000) % gameSize;
 		if (grid[x][y] == EMPTY) {
@@ -338,23 +465,10 @@ public class Game implements KeyListener, WindowListener {
 			placeBonus(bonus_type);
 		}
 	}
-	private void gameOver() {
+	public static void gameOver() {
 		game_over = true;
-		for(int i = 0;i<bb.getCurrentPacketsSize(); i++) {
-			try {
-				System.out.println(bb.get().toString());
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
 	}
 	// / IMPLEMENTED FUNCTIONS
-	/*
-	 * TODO: Should be getting moved to a Snake.java function.
-	 * (non-Javadoc)
-	 * @see java.awt.event.KeyListener#keyPressed(java.awt.event.KeyEvent)
-	 */
 	public void keyPressed(KeyEvent ke) {
 		int code = ke.getKeyCode();
 		Dimension dim;
