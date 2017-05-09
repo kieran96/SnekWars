@@ -26,7 +26,7 @@ public class Snake {
 	public int[][] enemysnake = null;
 	public boolean alive = false;
 	public int counter = 0;
-	public int direction = 2; //FORCE LEFT
+	public int direction = 1; //FORCE LEFT
 	public int grow = 0;
 	public int headposX = -1;
 	public int headposY = -1;
@@ -58,22 +58,44 @@ public class Snake {
 //		}
 //	}
 	
+	public void randomDirection() {
+		Random random = new Random();
+		int getFacePos = random.nextInt(3);
+		direction = getFacePos;
+	}
 	public Snake(String name) {
 		this.name = name;
 		enemysnake = new int[Game.getGameSize() * Game.getGameSize()][2];
+		/*for (int i = 0; i < Game.getGameSize(); i++) {
+			for (int j = 0; j < Game.getGameSize(); j++) {
+				Game.grid[i][j] = EMPTY;
+			}
+		}*/
+		for (int i = 0; i < Game.getGameSize() * Game.getGameSize(); i++) {
+			enemysnake[i][0] = -1;
+			enemysnake[i][1] = -1;
+		}
+		//enemysnake[0][0] = Game.getGameSize()/2;
+		//enemysnake[0][1] = Game.getGameSize()/2;
+		//Game.grid[Game.getGameSize()/2][Game.getGameSize()/2] = SNAKE_HEAD;
+		Game.placeBonus(FOOD_BONUS);
 		createSnake();
+		randomDirection();
 	}
 	//actually appends to the board a new snake.
 	private void createSnake() {
 		Random rand = new Random();
-		int randomX = rand.nextInt(20);
-		int randomY = rand.nextInt(20);
-		enemysnake[0][0] = Game.getGameSize()/2;
-		enemysnake[0][1] = Game.getGameSize()/2;
+		int randomX = rand.nextInt(Game.getGameSize());
+		int randomY = rand.nextInt(Game.getGameSize());
+		//enemysnake[0][0] = Game.getGameSize()/2;
+		//enemysnake[0][1] = Game.getGameSize()/2;
 		headposX = randomX;
 		headposY = randomY;
+		enemysnake[0][0] = randomX;
+		enemysnake[0][1] = randomY;
 		Game.grid[randomX][randomY] = SNAKE_HEAD;
 		Game.placeBonus(FOOD_BONUS);
+		System.out.println("A snake spawned at: x:"+randomX+" & y:"+randomY);
 		alive = true;
 	}
 	
@@ -96,9 +118,7 @@ public class Snake {
 		
 		return move;
 	}
-	private void moveenemySnake(int[][] snake) throws InterruptedException {
 
-	}
 	@Override 
 	public String toString() {
 		StringBuilder b = new StringBuilder();
