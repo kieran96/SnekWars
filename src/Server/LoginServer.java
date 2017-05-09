@@ -1,17 +1,18 @@
 package Server;
 
 import java.io.File;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentNavigableMap;
 
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
-public class LoginServer {
-	//TODO Use the code given to us to create player database
+public class LoginServer implements Runnable{	
 	DB db = DBMaker.newFileDB(new File("testdb"))
             .closeOnJvmShutdown()
             .make();
     ConcurrentNavigableMap<String, String> users = db.getTreeMap("UserCollection");
+    
 	//TODO: From Mitchell: MainThread wants an amount of fake players to load; 
 	//TODO: From Mitchell: as-well as a list of real players sent back to us.
 	/**
@@ -35,4 +36,11 @@ public class LoginServer {
 		}
 		return false;
 	}
+
+	@Override
+	public void run() {
+		
+		
+	}
+	
 }
