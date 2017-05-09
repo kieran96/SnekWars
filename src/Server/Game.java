@@ -373,7 +373,7 @@ public class Game implements KeyListener, WindowListener {
 			grow += 3;
 		snake[0][0] = fut_x;
 		snake[0][1] = fut_y;
-		if ((grid[snake[0][0]][snake[0][1]] == SNAKE)) {
+		if ((grid[snake[0][0]][snake[0][1]] == SNAKE) || (grid[snake[0][0]][snake[0][1]] == SNAKE_HEAD)) {
 			gameOver();
 			return;
 		}
