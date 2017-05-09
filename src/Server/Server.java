@@ -57,6 +57,31 @@ public class Server implements Runnable{
 		return threadArray;
 	}
 	
+	public static int playerCount() {
+		return Thread.activeCount();
+	}
+	
+	public static void createPlayer() {
+		Thread thread = new Thread(new Snake("Thread-"+playerCount()+""));
+		thread.setName("Thread-"+playerCount()+"");
+		thread.start();
+		
+		/*Thread thread = new Thread("Thread-"+playerCount()+"");
+		System.out.println("Created player:"+thread.getName());
+		thread.run();*/
+		/*e.submit(new Thread(new testProducer(bb), "p-"+playerCount()+""));
+		e.submit(new Thread(new testConsumer(bb), "c-"+playerCount()+""));
+		try {
+			System.out.println("Move loc:"+bb.get().getXMove());
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}*/
+		
+		//e.submit(new Thread(new testProducer(bb), "p1"));
+		//e.submit(new Thread(new testConsumer(bb), "c1"));
+	}
+	
 	@Override
 	public void run() {
 		//while (true) {
