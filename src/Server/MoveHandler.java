@@ -56,24 +56,43 @@ public class MoveHandler implements Runnable {
 						throw new IllegalBoundedBufferException("Illegal BoundedBuffer state");
 					} else {
 						bb.get();
-						
+						//MOVE
 						//move code from moveenemysnake and rewrite moveenemysnake to work with ArrayList.
-						
+						Thread.sleep(300);
 						for(Snake snake : this.getSnakeList()) {	
-							System.out.println(snake.toString());
+							//System.out.println("snake:"+snake.toString()+ "direction:"+snake.direction);
 							if (snake.direction < 0) {
 								return;
 							}
 							int ymove = 0;
 							int xmove = 0;
-								xmove = 0;
+							if (snake.direction == Game.UP) {
 								ymove = -1;
+								xmove = 0;
+							} else if (snake.direction == Game.DOWN) {
+								ymove = 1;
+								xmove = 0;
+							} else if (snake.direction == Game.LEFT) {
+								ymove = 0;
+								xmove = -1;
+							} else if (snake.direction == Game.RIGHT) {
+								ymove = 0;
+								xmove = 1;
+							}
 								//MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
 								//bb.put(up);
 							int tempx = snake.enemysnake[0][0];
 							int tempy = snake.enemysnake[0][1];
+							//int tempx = 10;
+							//int tempy = 10;
+							//System.out.println("tempx"+tempx);
+							//System.out.println("tempy:"+tempy);
 							int fut_x = snake.enemysnake[0][0] + xmove;
 							int fut_y = snake.enemysnake[0][1] + ymove;
+							/*System.out.println("snake:"+snake.name);
+							System.out.println("direction:"+snake.direction);
+							System.out.println("fut_x:"+fut_x);
+							System.out.println("fut_y:"+fut_y);*/
 							/*
 							 * Commented code here states that if the snake leaves the screen; game over for that snake.
 							 */
@@ -106,6 +125,9 @@ public class MoveHandler implements Runnable {
 								snake.enemysnake[0][1] = fut_y;
 							if ((Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] == snake.SNAKE)) {
 								//Game.gameOver();
+								Game.placeBonus(snake.FOOD_BONUS);
+								System.out.println("A enemy snake has been killed...");
+								snake.alive = false;
 								return;
 							}
 							Game.grid[tempx][tempy] = snake.EMPTY;
@@ -180,7 +202,8 @@ public class MoveHandler implements Runnable {
 					//MovePacket should come to us from all n players and 
 					//then placed into a new MovePacket and sent to the BB.
 					while(true) {
-						this.delay(1);
+						this.delay(0.300);
+						//Thread.sleep(250);
 						for(int i = 0; i<playerList.size(); i++) {
 							if(playerList.get(i) != null) {
 								//we need a move from the list of snakes.
@@ -211,6 +234,7 @@ public class MoveHandler implements Runnable {
 	public void delay(double seconds) {
 		double actualDelay = (seconds * 1000);
 		try {
+			System.out.println("The actual delay: " + actualDelay);
 			Thread.sleep((long) actualDelay);
 		} catch(Exception e) {
 			System.out.println(e.getStackTrace());
