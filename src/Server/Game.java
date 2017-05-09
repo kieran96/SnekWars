@@ -15,6 +15,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferStrategy;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
@@ -38,6 +39,7 @@ public class Game implements KeyListener, WindowListener {
 	public static int[][] grid = null;
 	private static int[][] snake = null;
 	//private int[][] enemysnake = null;
+	private ArrayList<Snake> snakeList;
 	private boolean enemysnakeAlive = false;
 	public int counter = 0;
 	private int direction = -1;
@@ -45,7 +47,7 @@ public class Game implements KeyListener, WindowListener {
 	private int height = 600;
 	private int width = 600;
 	private static int gameSize = 40;
-	private long speed = 750;
+	private long speed = 150;
 	private Frame frame = null;
 	private Canvas canvas = null;
 	private Graphics graph = null;
@@ -70,6 +72,11 @@ public class Game implements KeyListener, WindowListener {
 		canvas = new Canvas();
 		grid = new int[gameSize][gameSize];
 		snake = new int[gameSize * gameSize][2];
+		this.snakeList = new ArrayList<Snake>();
+		Thread p1 = new Thread(new MoveHandler(bb, MoveHandler.Role.PRODUCER, this.snakeList), "p1");
+		Thread c1 = new Thread(new MoveHandler(bb, MoveHandler.Role.CONSUMER, this.snakeList), "c1");
+		p1.start();
+		c1.start();
 	}
 	public void init() {
 		frame.setSize(width + 7, height + 27);
@@ -103,12 +110,13 @@ public class Game implements KeyListener, WindowListener {
 			if (counter == 10) {
 				Server.createPlayer();
 			}*/
+			System.out.println(game_over);
 			if (counter == 10) {
-				Server.createPlayer();
+				this.createPlayer();
 				//createSnake();
 			}
 			if (counter == 15) {
-				Server.createPlayer();
+				this.createPlayer();
 				//createSnake();
 			}
 			if (enemysnakeAlive == true) {
@@ -145,6 +153,28 @@ public class Game implements KeyListener, WindowListener {
 						ex);
 			}
 		}
+	}
+	public void createPlayer() {
+//		Thread thread = new Thread(new Snake("Thread-"+playerCount()+""));
+//		thread.setName("Thread-"+playerCount()+"");
+//		thread.start();
+
+		this.snakeList.add(new Snake(""+Server.playerCount()));
+		
+		/*Thread thread = new Thread("Thread-"+playerCount()+"");
+		System.out.println("Created player:"+thread.getName());
+		thread.run();*/
+		/*e.submit(new Thread(new testProducer(bb), "p-"+playerCount()+""));
+		e.submit(new Thread(new testConsumer(bb), "c-"+playerCount()+""));
+		try {
+			System.out.println("Move loc:"+bb.get().getXMove());
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}*/
+		
+		//e.submit(new Thread(new testProducer(bb), "p1"));
+		//e.submit(new Thread(new testConsumer(bb), "c1"));
 	}
 	private void initGame() {
 		// Initialise tabs
@@ -343,26 +373,26 @@ public class Game implements KeyListener, WindowListener {
 		case UP:
 			xmove = 0;
 			ymove = -1;
-			MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-			bb.put(up);
+			//MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+			//bb.put(up);
 			break;
 		case DOWN:
 			xmove = 0;
 			ymove = 1;
-            MovePacket down = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            bb.put(down);
+            //MovePacket down = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+            //bb.put(down);
 			break;
 		case RIGHT:
 			xmove = 1;
 			ymove = 0;
-            MovePacket right = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            bb.put(right);
+            //MovePacket right = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+            //bb.put(right);
 			break;
 		case LEFT:
 			xmove = -1;
 			ymove = 0;
-            MovePacket left = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            bb.put(left);
+            //MovePacket left = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+            //bb.put(left);
 			break;
 		default:
 			xmove = 0;
@@ -404,7 +434,7 @@ public class Game implements KeyListener, WindowListener {
 		snake[0][0] = fut_x;
 		snake[0][1] = fut_y;
 		if ((grid[snake[0][0]][snake[0][1]] == SNAKE)) {
-			gameOver();
+			//gameOver();
 			return;
 		}
 		grid[tempx][tempy] = EMPTY;

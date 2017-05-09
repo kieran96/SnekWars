@@ -4,6 +4,7 @@ import Testing.testConsumer;
 import Testing.testProducer;
 import util.BoundedBuffer;
 
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -51,7 +52,7 @@ public class Server implements Runnable{
 		bb = new BoundedBuffer(500);
 	}
 	
-	public Thread[] getPlayers() {
+	public static Thread[] getPlayers() {
 		Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
 		Thread[] threadArray = threadSet.toArray(new Thread[threadSet.size()]);
 		return threadArray;
@@ -61,26 +62,7 @@ public class Server implements Runnable{
 		return Thread.activeCount();
 	}
 	
-	public static void createPlayer() {
-		Thread thread = new Thread(new Snake("Thread-"+playerCount()+""));
-		thread.setName("Thread-"+playerCount()+"");
-		thread.start();
-		
-		/*Thread thread = new Thread("Thread-"+playerCount()+"");
-		System.out.println("Created player:"+thread.getName());
-		thread.run();*/
-		/*e.submit(new Thread(new testProducer(bb), "p-"+playerCount()+""));
-		e.submit(new Thread(new testConsumer(bb), "c-"+playerCount()+""));
-		try {
-			System.out.println("Move loc:"+bb.get().getXMove());
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}*/
-		
-		//e.submit(new Thread(new testProducer(bb), "p1"));
-		//e.submit(new Thread(new testConsumer(bb), "c1"));
-	}
+
 	
 	@Override
 	public void run() {
@@ -117,10 +99,10 @@ public class Server implements Runnable{
 		e.submit(new Thread(new testConsumer(bb), "c4"));
         */
 		if(this.type == Type.TESTING) {
-			Snake[] nSnake = new Snake[100];
-			for(int i = 0; i<nSnake.length; i++) {
-				nSnake[i] = new Snake(new int[0][0], true);
-			}
+//			Snake[] nSnake = new Snake[100];
+//			for(int i = 0; i<nSnake.length; i++) {
+//				nSnake[i] = new Snake(new int[0][0], true);
+//			} //fake array of snakes for debugging.
 			/*
 			 * Note:
 			 * 
@@ -129,16 +111,16 @@ public class Server implements Runnable{
 			 * Therefore don't use more than availableProcessors() threads.
 			 * 
 			 */
-			for(int i = 1; i<=2; i++) {
-
-				//create i Threads to producer moves from the players (the more of these, the more MovesPerSecond).
-				e.submit(new Thread(new MoveHandler(bb, MoveHandler.Role.PRODUCER, nSnake), ("Producer_"+i)));	
-				
-			}
-			for(int i = 1; i<=(4); i++){ 
-				//create i Threads to handle load of Producer(s)
-				e.submit(new Thread(new MoveHandler(bb, MoveHandler.Role.CONSUMER, nSnake), ("Consumer_"+i)));				
-			}
+//			for(int i = 1; i<=2; i++) {
+//
+//				//create i Threads to producer moves from the players (the more of these, the more MovesPerSecond).
+//				e.submit(new Thread(new MoveHandler(bb, MoveHandler.Role.PRODUCER, nSnake), ("Producer_"+i)));	
+//				
+//			}
+//			for(int i = 1; i<=(4); i++){ 
+//				//create i Threads to handle load of Producer(s)
+//				e.submit(new Thread(new MoveHandler(bb, MoveHandler.Role.CONSUMER, nSnake), ("Consumer_"+i)));				
+//			}
 
 			
 			//Change to a Future task, the future of which returning as an int (int as "Length of Snakes") which will dictate the

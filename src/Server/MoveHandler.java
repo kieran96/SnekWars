@@ -4,6 +4,7 @@ import Testing.IllegalBoundedBufferException;
 import Testing.IllegalRoleException;
 import util.BoundedBuffer;
 import util.MovePacket;
+import java.util.ArrayList;
 
 public class MoveHandler implements Runnable {
 	private BoundedBuffer bb;
@@ -13,55 +14,17 @@ public class MoveHandler implements Runnable {
 	
 	enum Role {CONSUMER, PRODUCER};
 	private Role role;
-	Snake[] playerList;
+	ArrayList<Snake> playerList;
 	
-	public MoveHandler() {
-		System.out.println("Constructing MoveHandlerThread with no BoundedBuffer, no role and no PlayerList");
-	}
-	public MoveHandler(BoundedBuffer bb) {
-		this.bb = bb;
-		System.out.println("Constructing MoveHandlerThread with a BoundedBuffer and with no role.");
-	}
-	public MoveHandler(Role role) {
-		this.role = role;
-		System.out.println("Constructing MoveHandlerThread with no BoundedBuffer and a " 
-				+ this.role.toString() 
-				+ " role and no PlayerList");
-	}
-	public MoveHandler(Snake[] playerList) {
-		this.playerList = playerList;
-		System.out.println("Constructing MoveHandlerThread with no BoundedBuffer, no Role and a PlayerList of the size: "
-				+ this.playerList.length);
-	}
-	public MoveHandler(BoundedBuffer bb, Role role) {
-		this.bb = bb;
-		this.role = role;
-		System.out.println("Constructing MoveHandlerThread with a BoundedBuffer, a " 
-				+ this.role.toString() 
-				+ " role and no PlayerList");
-	}	
-	public MoveHandler(Role role, Snake[] playerList) {
-		this.role = role;
-		this.playerList = playerList;
-		System.out.println("Constructing MoveHandlerThread with no BoundedBuffer,  a " 
-				+ this.role.toString() 
-				+ " role and a PlayerList of the size"
-				+ this.playerList.length);
-	}
-	public MoveHandler(BoundedBuffer bb, Snake[] playerList) {
-		this.bb = bb;
-		this.playerList = playerList;
-		System.out.println("Constructing MoveHandlerThread with a BoundedBuffer, no role and a PlayerList of the size: " 
-				+ this.playerList.length);
-	}
-	public MoveHandler(BoundedBuffer bb, Role role, Snake[] playerList) {
+
+	public MoveHandler(BoundedBuffer bb, Role role, ArrayList<Snake> playerList) {
 		this.bb = bb;
 		this.role = role;
 		this.playerList = playerList;
 		System.out.println("Constructing MoveHandlerThread with a BoundedBuffer and a " 
 				+ this.role.toString() 
 				+ " role and a PlayerList of the size " 
-				+ this.playerList.length);
+				+ this.playerList.size());
 
 	}
 	public synchronized BoundedBuffer getBb() {
@@ -76,14 +39,12 @@ public class MoveHandler implements Runnable {
 	public synchronized void setRole(Role role) {
 		this.role = role;
 	}
-	public synchronized Snake[] getSnakeList() {
+	public synchronized ArrayList<Snake> getSnakeList() {
 		return this.playerList;
 	}
-	public synchronized void setPlayerList(Snake[] playerList) {
+	public synchronized void setPlayerList(ArrayList<Snake> playerList) {
 		this.playerList = playerList;
-		
 	}
-	
 	@Override
 	public void run() {
 		if(this.role == Role.CONSUMER) {
@@ -95,6 +56,105 @@ public class MoveHandler implements Runnable {
 						throw new IllegalBoundedBufferException("Illegal BoundedBuffer state");
 					} else {
 						bb.get();
+						
+						//move code from moveenemysnake and rewrite moveenemysnake to work with ArrayList.
+						
+						for(Snake snake : this.getSnakeList()) {	
+							System.out.println(snake.toString());
+							if (snake.direction < 0) {
+								return;
+							}
+							int ymove = 0;
+							int xmove = 0;
+								xmove = 0;
+								ymove = -1;
+								//MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
+								//bb.put(up);
+							int tempx = snake.enemysnake[0][0];
+							int tempy = snake.enemysnake[0][1];
+							int fut_x = snake.enemysnake[0][0] + xmove;
+							int fut_y = snake.enemysnake[0][1] + ymove;
+							/*
+							 * Commented code here states that if the snake leaves the screen; game over for that snake.
+							 */
+							//		 if ((fut_x < 0) || (fut_y < 0) || (fut_x >= gameSize)
+							//		 || (fut_y >= gameSize)) {
+							//		 gameOver();
+							//		 return;
+							//		 }
+							/*
+							 * Code that handles when the snake reaches the side of the screen - move to other side.
+							 */
+							if(fut_x < 0)
+								fut_x = Game.getGameSize() - 1;
+							if(fut_y < 0)
+								fut_y = Game.getGameSize() - 1;
+							if(fut_x >= Game.getGameSize())
+								fut_x = 0;
+							if(fut_y >= Game.getGameSize())
+								fut_y = 0;
+	
+	
+							if (Game.grid[fut_x][fut_y] == snake.FOOD_BONUS)
+							{
+								snake.grow ++;
+								Game.placeBonus(snake.FOOD_BONUS);
+							}
+							else if(Game.grid[fut_x][fut_y] == snake.BIG_FOOD_BONUS)
+								snake.grow += 3;
+								snake.enemysnake[0][0] = fut_x;
+								snake.enemysnake[0][1] = fut_y;
+							if ((Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] == snake.SNAKE)) {
+								//Game.gameOver();
+								return;
+							}
+							Game.grid[tempx][tempy] = snake.EMPTY;
+							int snakex, snakey, i;
+							for (i = 1; i < Game.getGameSize() * Game.getGameSize(); i++) {
+								if ((snake.enemysnake[i][0] < 0) || (snake.enemysnake[i][1] < 0)) {
+									break;
+								}
+								Game.grid[snake.enemysnake[i][0]][snake.enemysnake[i][1]] = snake.EMPTY;
+								snakex = snake.enemysnake[i][0];
+								snakey = snake.enemysnake[i][1];
+								snake.enemysnake[i][0] = tempx;
+								snake.enemysnake[i][1] = tempy;
+								tempx = snakex;
+								tempy = snakey;
+							}
+							Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] = snake.SNAKE_HEAD;
+							for (i = 1; i < Game.getGameSize() * Game.getGameSize(); i++) {
+								if ((snake.enemysnake[i][0] < 0) || (snake.enemysnake[i][1] < 0)) {
+									break;
+								}
+								Game.grid[snake.enemysnake[i][0]][snake.enemysnake[i][1]] = snake.SNAKE;
+							}
+							snake.bonusTime --;
+							if (snake.bonusTime == 0)
+							{
+								for (i = 0; i < Game.getGameSize(); i++)
+								{
+									for (int j = 0; j < Game.getGameSize(); j++)
+									{
+										if(Game.grid[i][j]==snake.BIG_FOOD_BONUS)
+											Game.grid[i][j]=snake.EMPTY;
+									}
+								}
+							}
+							if (snake.grow > 0) {
+								snake.enemysnake[i][0] = tempx;
+								snake.enemysnake[i][1] = tempy;
+								Game.grid[snake.enemysnake[i][0]][snake.enemysnake[i][1]] = snake.SNAKE;
+								if(Game.getScore()%10 == 0)
+								{
+									Game.placeBonus(snake.BIG_FOOD_BONUS);
+									snake.bonusTime = 100;
+								}
+								snake.grow --;
+							}
+						
+						}
+						
 						amountConsumed++;
 						if(amountConsumed % 10000 == 0) {
 							System.out.println("The current amount of Packets processed: " 
@@ -121,10 +181,13 @@ public class MoveHandler implements Runnable {
 					//then placed into a new MovePacket and sent to the BB.
 					while(true) {
 						this.delay(1);
-						for(int i = 0; i<playerList.length; i++) {
-							if(playerList[i] != null) {
-								bb.put(new MovePacket(playerList[i].getMove(), playerList[i]));
+						for(int i = 0; i<playerList.size(); i++) {
+							if(playerList.get(i) != null) {
+								//we need a move from the list of snakes.
+								bb.put(new MovePacket(playerList.get(i).getMove(), playerList.get(i)));
+								
 								amountProduced++;							
+								
 							}
 						}						
 					}
@@ -158,7 +221,7 @@ public class MoveHandler implements Runnable {
 		StringBuilder b = new StringBuilder();
 		b.append("MoveHandler \n BoundedBuffer size: " + this.getBb().getMaxSize());
 		b.append("\n Role: " + this.getRole().toString());
-		b.append("\n Player list size: " + this.getSnakeList().length);
+		b.append("\n Player list size: " + this.getSnakeList().size());
 		
 		return b.toString();
 	}
