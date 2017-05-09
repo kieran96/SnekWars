@@ -123,12 +123,18 @@ public class MoveHandler implements Runnable {
 								snake.grow += 3;
 								snake.enemysnake[0][0] = fut_x;
 								snake.enemysnake[0][1] = fut_y;
-							if ((Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] == snake.SNAKE)) {
+							if ((Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] == snake.SNAKE) || (Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] == snake.SNAKE_HEAD)) {
 								//Game.gameOver();
 								Game.placeBonus(snake.FOOD_BONUS);
 								System.out.println("A enemy snake has been killed...");
+								//Game.placeBonusAtLoc(Game.BIG_FOOD_BONUS, snake.enemysnake[0][0], snake.enemysnake[0][1]);
+								//Game.grid[gameSize/2][gameSize/2];
+								Game.grid[tempx][tempy] = snake.EMPTY;
+								Game.placeBonusAtLoc(Game.BIG_FOOD_BONUS, tempx, tempy);
+								playerList.remove(snake);
 								snake.alive = false;
-								return;
+								
+								break;
 							}
 							Game.grid[tempx][tempy] = snake.EMPTY;
 							int snakex, snakey, i;
