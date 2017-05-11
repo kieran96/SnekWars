@@ -16,13 +16,11 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import util.MovePacket;
 import util.BoundedBuffer;
+import util.MovePacket;
 
 public class Game implements KeyListener, WindowListener {
 	// KEYS MAP
@@ -38,25 +36,22 @@ public class Game implements KeyListener, WindowListener {
 	public final static int SNAKE = 4;
 	public final static int SNAKE_HEAD=5;
 	public static int[][] grid = null;
-	private static int[][] snake = null;
-	//private int[][] enemysnake = null;
+	private static Snake snake;
 	private ArrayList<Snake> snakeList;
-	private boolean enemysnakeAlive = false;
 	public int counter = 0;
-	private int direction = -1;
-	private int next_direction = -1;
+	private int direction = 1;
 	private int height = 600;
 	private int width = 600;
 	//Code to make sizeable game based on screensize
 	Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 	int screenSize = (int) (dim.height * 0.5);
 	private static int gameSize = 40;
-	private long speed = 300;
+	public static long speed = 300;
 	private Frame frame = null;
 	private Canvas canvas = null;
 	private Graphics graph = null;
 	private BufferStrategy strategy = null;
-	private static boolean game_over = false;
+	public static boolean game_over = false;
 	private boolean paused = false;
 	private int grow = 0;
 	private long cycleTime = 0;
@@ -70,13 +65,18 @@ public class Game implements KeyListener, WindowListener {
 	 */
 
 	public Game(BoundedBuffer BB) {
-		super();
+		//super();
 		this.bb = BB;
 		frame = new Frame();
 		canvas = new Canvas();
 		grid = new int[gameSize][gameSize];
-		snake = new int[gameSize * gameSize][2];
+		snake = new Snake("The Player", false);
+		snake.enemysnake = new int[gameSize * gameSize][2];
 		this.snakeList = new ArrayList<Snake>();
+		snakeList.add(this.snake);
+		for(int i = 0; i<10; i++) {
+			this.createPlayer();
+		}
 		Thread p1 = new Thread(new MoveHandler(bb, MoveHandler.Role.PRODUCER, this.snakeList), "p1");
 		Thread c1 = new Thread(new MoveHandler(bb, MoveHandler.Role.CONSUMER, this.snakeList), "c1");
 		p1.start();
@@ -101,9 +101,16 @@ public class Game implements KeyListener, WindowListener {
 		graph = strategy.getDrawGraphics();
 		initGame();
 		renderGame();
+
 	}
 	public void mainLoop() {
 		while (running) {
+			try {
+				Thread.sleep(speed);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			//work here
 			/*for (int i=0; i<snakeList.size(); i++) {
 				System.out.println("Array index("+i+")"+snakeList.get(i));
@@ -124,15 +131,6 @@ public class Game implements KeyListener, WindowListener {
 			}*/
 			
 			//At 10sec mark spawn 20 snakes
-			if (counter == 10) {
-				for (int i=0; i<2; i++) {		
-					this.createPlayer();
-				}
-			}
-			
-			if (enemysnakeAlive == true) {
-				//System.out.println("moving left");
-			}
 			//System.out.println("thread:"+Thread.activeCount());
 			Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
 			Thread[] threadArray = threadSet.toArray(new Thread[threadSet.size()]);
@@ -143,26 +141,9 @@ public class Game implements KeyListener, WindowListener {
 				}
 			}
 			
-			if(!paused && !game_over)
-			{
-				direction = next_direction;
-				try {
-					moveSnake();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
+
 			renderGame();
-			cycleTime = System.currentTimeMillis() - cycleTime;
-			sleepTime = speed - cycleTime;
-			if (sleepTime < 0)
-				sleepTime = 0;
-			try {
-				Thread.sleep(sleepTime);
-			} catch (InterruptedException ex) {
-				Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null,
-						ex);
-			}
+
 		}
 	}
 	public void createPlayer() {
@@ -170,7 +151,7 @@ public class Game implements KeyListener, WindowListener {
 //		thread.setName("Thread-"+playerCount()+"");
 //		thread.start();
 
-		this.snakeList.add(new Snake(""+(snakeList.size()+1)));
+		this.snakeList.add(new Snake(""+(snakeList.size()+1), true));
 		
 		/*Thread thread = new Thread("Thread-"+playerCount()+"");
 		System.out.println("Created player:"+thread.getName());
@@ -180,7 +161,6 @@ public class Game implements KeyListener, WindowListener {
 		try {
 			System.out.println("Move loc:"+bb.get().getXMove());
 		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}*/
 		
@@ -195,11 +175,11 @@ public class Game implements KeyListener, WindowListener {
 			}
 		}
 		for (int i = 0; i < gameSize * gameSize; i++) {
-			snake[i][0] = -1;
-			snake[i][1] = -1;
+			snake.enemysnake[i][0] = -1;
+			snake.enemysnake[i][1] = -1;
 		}
-		snake[0][0] = gameSize/2;
-		snake[0][1] = gameSize/2;
+		snake.enemysnake[0][0] = gameSize/2;
+		snake.enemysnake[0][1] = gameSize/2;
 		grid[gameSize/2][gameSize/2] = SNAKE_HEAD;
 		for (int i=0; i<100;i++) {
 			placeBonus(FOOD_BONUS);
@@ -286,146 +266,12 @@ public class Game implements KeyListener, WindowListener {
 	public static int getScore() {
 		int score = 0;
 		for (int i = 0; i < gameSize * gameSize; i++) {
-			if ((snake[i][0] < 0) || (snake[i][1] < 0)) {
+			if ((snake.enemysnake[i][0] < 0) || (snake.enemysnake[i][1] < 0)) {
 				break;
 			}
 			score++;
 		}
 		return score;
-	}
-
-	private void moveSnake() throws InterruptedException {
-		if (direction < 0) {
-			return;
-		}
-		int ymove = 0;
-		int xmove = 0;
-		switch (direction) {
-		case UP:
-			xmove = 0;
-			ymove = -1;
-			//MovePacket up = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-			//bb.put(up);
-			break;
-		case DOWN:
-			xmove = 0;
-			ymove = 1;
-            //MovePacket down = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            //bb.put(down);
-			break;
-		case RIGHT:
-			xmove = 1;
-			ymove = 0;
-            //MovePacket right = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            //bb.put(right);
-			break;
-		case LEFT:
-			xmove = -1;
-			ymove = 0;
-            //MovePacket left = new MovePacket(new int[snake[0][0]][snake[0][1]], xmove, ymove);
-            //bb.put(left);
-			break;
-		default:
-			xmove = 0;
-			ymove = 0;
-			break;
-		}
-		int tempx = snake[0][0];
-		int tempy = snake[0][1];
-		for (int h = 0; h<grid.length; h++) {
-			for (int k=0; k<grid.length; k++) {
-				System.out.print(grid[k][h]+" ");
-			}
-			System.out.println();
-		}
-		System.out.println("--------------------------");
-
-	    //System.out.println("grid:"+Arrays.deepToString(grid));
-		//System.out.println("temp_x:"+tempx);
-		//System.out.println("temp_y:"+tempy);
-		int fut_x = snake[0][0] + xmove;
-		int fut_y = snake[0][1] + ymove;
-		//System.out.println("direction:"+direction);
-		//System.out.println("fut_x:"+fut_x);
-		//System.out.println("fut_y:"+fut_y);
-		/*
-		 * Commented code here states that if the snake leaves the screen; game over for that snake.
-		 */
-		//		 if ((fut_x < 0) || (fut_y < 0) || (fut_x >= gameSize)
-		//		 || (fut_y >= gameSize)) {
-		//		 gameOver();
-		//		 return;
-		//		 }
-		/*
-		 * Code that handles when the snake reaches the side of the screen - move to other side.
-		 */
-		if(fut_x < 0)
-			fut_x = gameSize - 1;
-		if(fut_y < 0)
-			fut_y = gameSize - 1;
-		if(fut_x >= gameSize)
-			fut_x = 0;
-		if(fut_y >= gameSize)
-			fut_y = 0;
-
-
-		if (grid[fut_x][fut_y] == FOOD_BONUS)
-		{
-			grow ++;
-			placeBonus(FOOD_BONUS);
-		}
-		else if(grid[fut_x][fut_y] == BIG_FOOD_BONUS)
-			grow += 3;
-		snake[0][0] = fut_x;
-		snake[0][1] = fut_y;
-		if ((grid[snake[0][0]][snake[0][1]] == SNAKE) || (grid[snake[0][0]][snake[0][1]] == SNAKE_HEAD)) {
-			gameOver();
-			return;
-		}
-		grid[tempx][tempy] = EMPTY;
-		int snakex, snakey, i;
-		for (i = 1; i < gameSize * gameSize; i++) {
-			if ((snake[i][0] < 0) || (snake[i][1] < 0)) {
-				break;
-			}
-			grid[snake[i][0]][snake[i][1]] = EMPTY;
-			snakex = snake[i][0];
-			snakey = snake[i][1];
-			snake[i][0] = tempx;
-			snake[i][1] = tempy;
-			tempx = snakex;
-			tempy = snakey;
-		}
-		grid[snake[0][0]][snake[0][1]] = SNAKE_HEAD;
-		for (i = 1; i < gameSize * gameSize; i++) {
-			if ((snake[i][0] < 0) || (snake[i][1] < 0)) {
-				break;
-			}
-			grid[snake[i][0]][snake[i][1]] = SNAKE;
-		}
-		bonusTime --;
-		if (bonusTime == 0)
-		{
-			for (i = 0; i < gameSize; i++)
-			{
-				for (int j = 0; j < gameSize; j++)
-				{
-					if(grid[i][j]==BIG_FOOD_BONUS)
-						grid[i][j]=EMPTY;
-				}
-			}
-		}
-		if (grow > 0) {
-			snake[i][0] = tempx;
-			snake[i][1] = tempy;
-			grid[snake[i][0]][snake[i][1]] = SNAKE;
-			if(getScore()%10 == 0)
-			{
-				placeBonus(BIG_FOOD_BONUS);
-				bonusTime = 100;
-			}
-			grow --;
-		}
 	}
 	
 	public static int getGameSize() {
@@ -460,23 +306,30 @@ public class Game implements KeyListener, WindowListener {
 		paused = false;
 		switch (code) {
 		case KeyEvent.VK_UP:
-			if (direction != DOWN) {
-				next_direction = UP;
+			if (snake.direction != DOWN) {
+				snake.direction = UP;
+				System.out.println("Player's direction changed to UP");
 			}
 			break;
 		case KeyEvent.VK_DOWN:
-			if (direction != UP) {
-				next_direction = DOWN;
+			if (snake.direction != UP) {
+				snake.direction = DOWN;
+				System.out.println("Player's direction changed to DOWN");
+
 			}
 			break;
 		case KeyEvent.VK_LEFT:
-			if (direction != RIGHT) {
-				next_direction = LEFT;
+			if (snake.direction != RIGHT) {
+				snake.direction = LEFT;
+				System.out.println("Player's direction changed to LEFT");
+
 			}
 			break;
 		case KeyEvent.VK_RIGHT:
-			if (direction != LEFT) {
-				next_direction = RIGHT;
+			if (snake.direction != LEFT) {
+				snake.direction = RIGHT;
+				System.out.println("Player's direction changed to RIGHT");
+
 			}
 			break;
 		case KeyEvent.VK_F11:

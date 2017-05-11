@@ -21,6 +21,13 @@ public class MovePacket {
 		this.xmove = xmove;
 		this.ymove = ymove;
 	}
+	/*
+	 * The MovePacket currently in use by the MoveHandler: 11-May-2017.
+	 */
+	public MovePacket(Snake snake) {
+		this.theSnake = snake;
+		System.out.println("New MovePacket for: " + snake.name + " and their direction: " + snake.direction);
+	}
 	public MovePacket(MovePacket mp) {
 		this.moveLocation = mp.getMoveLocation();
 		this.theSnake = mp.getTheSnake();
