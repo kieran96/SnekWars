@@ -3,6 +3,7 @@ package Server;
 import java.awt.Canvas;
 import java.awt.Frame;
 import java.awt.Graphics;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,9 +60,42 @@ public class Snake {
 //	}
 	
 	public void randomDirection() {
+//		public final static int UP = 0;
+//		public final static int DOWN = 1;
+//		public final static int LEFT = 2;
+//		public final static int RIGHT = 3;
+	}
+	
+	public void newDirection() {
 		Random random = new Random();
-		int getFacePos = random.nextInt(3);
-		direction = getFacePos;
+		int randomTick = random.nextInt(2);
+		if (randomTick == 1) {
+			int getFacePos = random.nextInt(3);
+			switch (getFacePos) {
+			case 0:
+				if (direction != Game.DOWN) {
+					direction = Game.UP;
+				}
+				break;
+			case 1:
+				if (direction != Game.UP) {
+					direction = Game.DOWN;
+				}
+				break;
+			case 2:
+				if (direction != Game.RIGHT) {
+					direction = Game.LEFT;
+				}
+				break;
+			case 3:
+				if (direction != Game.LEFT) {
+					direction = Game.RIGHT;
+				}
+				break;
+			}
+		}
+		
+		
 	}
 	public Snake(String name) {
 		this.name = name;
@@ -117,6 +151,17 @@ public class Snake {
 		}			
 		
 		return move;
+	}
+	
+	public int getScore() {
+		int score = 0;
+		for (int i = 0; i < Game.getGameSize() * Game.getGameSize(); i++) {
+			if ((enemysnake[i][0] < 0) || (enemysnake[i][1] < 0)) {
+				break;
+			}
+			score++;
+		}
+		return score;
 	}
 
 	@Override 
