@@ -105,30 +105,30 @@ public class Game implements KeyListener, WindowListener {
 	public void mainLoop() {
 		while (running) {
 			//work here
-			for (int i=0; i<snakeList.size(); i++) {
+			/*for (int i=0; i<snakeList.size(); i++) {
 				System.out.println("Array index("+i+")"+snakeList.get(i));
-			}
+			}*/
 			counter += 1;
 			cycleTime = System.currentTimeMillis();
-			System.out.println(counter);
+			//System.out.println(counter);
 			/*System.out.println(counter);
 			System.out.println("Thread:"+Thread.currentThread().getName());
 			System.out.println("Thread:"+Thread.activeCount());
 			if (counter == 10) {
 				Server.createPlayer();
 			}*/
-			System.out.println(game_over);
+			//System.out.println(game_over);
 			//Spawn a new enemy snake every 10sec
-			if (counter%10 == 0) {
-				this.createPlayer();
-			}
+			/*if (counter%10 == 0) {
+				this.createPlayer();x=
+			}*/
 			
 			//At 10sec mark spawn 20 snakes
-			/*if (counter == 10) {
-				for (int i=0; i<20; i++) {		
+			if (counter == 10) {
+				for (int i=0; i<2; i++) {		
 					this.createPlayer();
 				}
-			}*/
+			}
 			
 			if (enemysnakeAlive == true) {
 				//System.out.println("moving left");
@@ -201,9 +201,9 @@ public class Game implements KeyListener, WindowListener {
 		snake[0][0] = gameSize/2;
 		snake[0][1] = gameSize/2;
 		grid[gameSize/2][gameSize/2] = SNAKE_HEAD;
-		/*for (int i=0; i<20;i++) {
+		for (int i=0; i<100;i++) {
 			placeBonus(FOOD_BONUS);
-		}*/
+		}
 		/*for(Snake snake : this.snakeList) {
 			for (int i = 0; i < gameSize * gameSize; i++) {
 				snake.enemysnake[i][0] = -1;
@@ -334,18 +334,20 @@ public class Game implements KeyListener, WindowListener {
 		int tempy = snake[0][1];
 		for (int h = 0; h<grid.length; h++) {
 			for (int k=0; k<grid.length; k++) {
-				System.out.print(grid[h][k]+" ");
+				System.out.print(grid[k][h]+" ");
 			}
 			System.out.println();
 		}
+		System.out.println("--------------------------");
+
 	    //System.out.println("grid:"+Arrays.deepToString(grid));
-		System.out.println("temp_x:"+tempx);
-		System.out.println("temp_y:"+tempy);
+		//System.out.println("temp_x:"+tempx);
+		//System.out.println("temp_y:"+tempy);
 		int fut_x = snake[0][0] + xmove;
 		int fut_y = snake[0][1] + ymove;
-		System.out.println("direction:"+direction);
-		System.out.println("fut_x:"+fut_x);
-		System.out.println("fut_y:"+fut_y);
+		//System.out.println("direction:"+direction);
+		//System.out.println("fut_x:"+fut_x);
+		//System.out.println("fut_y:"+fut_y);
 		/*
 		 * Commented code here states that if the snake leaves the screen; game over for that snake.
 		 */
