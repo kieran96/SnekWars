@@ -4,6 +4,8 @@ import Testing.IllegalBoundedBufferException;
 import Testing.IllegalRoleException;
 import util.BoundedBuffer;
 import util.MovePacket;
+import util.Snake;
+
 import java.util.ArrayList;
 
 public class MoveHandler implements Runnable {
@@ -15,7 +17,7 @@ public class MoveHandler implements Runnable {
 	enum Role {CONSUMER, PRODUCER};
 	private Role role;
 	ArrayList<Snake> playerList;
-	
+
 
 	public MoveHandler(BoundedBuffer bb, Role role, ArrayList<Snake> playerList) {
 		this.bb = bb;
@@ -47,22 +49,26 @@ public class MoveHandler implements Runnable {
 	}
 	@Override
 	public void run() {
+		System.out.println("Starting MoveHandlerThread with a BoundedBuffer and a " 
+				+ this.role.toString() 
+				+ " role and a PlayerList of the size " 
+				+ this.playerList.size());
 		if(this.role == Role.CONSUMER) {
 			//should contain the code to "update the board"
 			//attempt to consume
-			while(!Game.game_over) {
+			while(Game.running) {
 				try {
 					if(bb == null) {
 						throw new IllegalBoundedBufferException("Illegal BoundedBuffer state");
-					} else {
+					} else if (Game.running){
+						//this.delay(16);
+
 						//Get from bb and set-up:
 						MovePacket context = bb.get();
 						Snake snake = context.getTheSnake();
-						if(snake.AI == true) {
+						if(snake.IsAI == true) {
 							snake.newDirection();
 						}
-						
-
 						//decide where we will be going next:
 						//TODO: Move to MovePacket.
 						int ymove = 0;
@@ -102,22 +108,26 @@ public class MoveHandler implements Runnable {
 							fut_y = 0;
 
 						//If the snake just ran into some food:
-						if (Game.grid[fut_x][fut_y] == snake.FOOD_BONUS)
+						if (Game.grid[fut_x][fut_y] == Game.FOOD_BONUS)
 						{
 							snake.grow ++;
-							Game.placeBonus(snake.FOOD_BONUS);
 						}
-						else if(Game.grid[fut_x][fut_y] == snake.BIG_FOOD_BONUS) 
+						else if(Game.grid[fut_x][fut_y] == Game.BIG_FOOD_BONUS) 
 							snake.grow += 3;
 							snake.enemysnake[0][0] = fut_x;
 							snake.enemysnake[0][1] = fut_y;
 							
 						
-
-						if ((Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] == snake.SNAKE) || (Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] == snake.SNAKE_HEAD)) {
+							/*
+							 * Should the snake die?
+							 */
+						if ((Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] == Game.SNAKE) 
+								|| (Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] == Game.SNAKE_HEAD
+								|| (Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] == Game.PLAYER_SNAKE_HEAD))) {
+							
 							//Game.gameOver();
-							Game.placeBonus(snake.FOOD_BONUS);
-							System.out.println("A enemy snake has been killed...");
+							Game.placeBonus(Game.FOOD_BONUS);
+							System.out.println(snake.name + " has been killed...");
 							//Game.placeBonusAtLoc(Game.BIG_FOOD_BONUS, snake.enemysnake[0][0], snake.enemysnake[0][1]);
 							//Game.grid[gameSize/2][gameSize/2];
 							//
@@ -131,7 +141,7 @@ public class MoveHandler implements Runnable {
 								if ((snake.enemysnake[i][0] < 0) || (snake.enemysnake[i][1] < 0)) {
 									break;
 								}
-								Game.grid[snake.enemysnake[i][0] ][snake.enemysnake[i][1]]= snake.FOOD_BONUS;
+								Game.grid[snake.enemysnake[i][0] ][snake.enemysnake[i][1]]= Game.FOOD_BONUS;
 								//Game.placeBonusAtLoc(Game.BIG_FOOD_BONUS, tempx+i, tempy);
 								//snake.enemysnake[i][0] = snake.EMPTY;
 								//snake.enemysnake[i][1] = snake.EMPTY;
@@ -148,19 +158,26 @@ public class MoveHandler implements Runnable {
 							} */
 							//	}
 							//}
-							Game.grid[tempx][tempy] = snake.BIG_FOOD_BONUS;
-							playerList.remove(snake);
+							Game.grid[tempx][tempy] = Game.BIG_FOOD_BONUS;
+							if(playerList.remove(snake)) {
+								System.out.println("Successfully removed " + snake.name + " from list");
+ 							} else {
+								System.out.println("Unsuccessfully removed " + snake.name + " from list");
+
+								System.out.println(snake.toString());
+							}
 							snake.alive = false;
+							snake.deaths++;
 						}
 						
 						if(snake.alive != false) {
-							Game.grid[tempx][tempy] = snake.EMPTY;
+							Game.grid[tempx][tempy] = Game.EMPTY;
 							int snakex, snakey, i;
 							for (i = 1; i < Game.getGameSize() * Game.getGameSize(); i++) {
 								if ((snake.enemysnake[i][0] < 0) || (snake.enemysnake[i][1] < 0)) {
 									break;
 								}
-								Game.grid[snake.enemysnake[i][0]][snake.enemysnake[i][1]] = snake.EMPTY;
+								Game.grid[snake.enemysnake[i][0]][snake.enemysnake[i][1]] = Game.EMPTY;
 								snakex = snake.enemysnake[i][0];
 								snakey = snake.enemysnake[i][1];
 								snake.enemysnake[i][0] = tempx;
@@ -168,20 +185,25 @@ public class MoveHandler implements Runnable {
 								tempx = snakex;
 								tempy = snakey;
 							}
-							Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] = snake.SNAKE_HEAD;
+							if(snake.IsAI == false) {
+								Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] = Game.PLAYER_SNAKE_HEAD;
+
+							} else {
+								Game.grid[snake.enemysnake[0][0]][snake.enemysnake[0][1]] = Game.SNAKE_HEAD;								
+							}
 							for (i = 1; i < Game.getGameSize() * Game.getGameSize(); i++) {
 								if ((snake.enemysnake[i][0] < 0) || (snake.enemysnake[i][1] < 0)) {
 									break;
 								}
-								Game.grid[snake.enemysnake[i][0]][snake.enemysnake[i][1]] = snake.SNAKE;
+								Game.grid[snake.enemysnake[i][0]][snake.enemysnake[i][1]] = Game.SNAKE;
 								//System.out.println("x:"+snake.enemysnake[i][0]+"| y:"+snake.enemysnake[i][1]);
 							}
 							snake.bonusTime --;
 							if (snake.bonusTime == 0) {
 								for (i = 0; i < Game.getGameSize(); i++) {
 									for (int j = 0; j < Game.getGameSize(); j++){
-										if(Game.grid[i][j]==snake.BIG_FOOD_BONUS) {
-											Game.grid[i][j]=snake.EMPTY;
+										if(Game.grid[i][j]==Game.BIG_FOOD_BONUS) {
+											Game.grid[i][j]=Game.EMPTY;
 										}
 									}
 								}
@@ -189,10 +211,10 @@ public class MoveHandler implements Runnable {
 							if (snake.grow > 0) {
 								snake.enemysnake[i][0] = tempx;
 								snake.enemysnake[i][1] = tempy;
-								Game.grid[snake.enemysnake[i][0]][snake.enemysnake[i][1]] = snake.SNAKE;
+								Game.grid[snake.enemysnake[i][0]][snake.enemysnake[i][1]] = Game.SNAKE;
 								if(Game.getScore()%10 == 0)
 								{
-									Game.placeBonus(snake.BIG_FOOD_BONUS);
+									Game.placeBonus(Game.BIG_FOOD_BONUS);
 									snake.bonusTime = 100;
 								}
 								snake.grow --;
@@ -200,13 +222,15 @@ public class MoveHandler implements Runnable {
 						}
 						
 						//Statistics:
-						amountConsumed++;
-						if(amountConsumed % 10 == 0) {
-							System.out.println("The current amount of Packets processed: " 
-									+ amountConsumed + " Current run-time: " 
-									+ ((System.currentTimeMillis() - runningTime) / 1000) 
-									+ " seconds. Average packets per second: "
-									+ (amountConsumed / ((System.currentTimeMillis() - runningTime) / 1000)));
+//						amountConsumed++;
+
+						if(amountConsumed % 100 == 0) {
+//							System.out.println("The current amount of Packets processed: " 
+//									+ amountConsumed + " Current run-time: " 
+//									+ ((System.currentTimeMillis() - runningTime) / 1000) 
+//									+ " seconds. Average packets per second: "
+//									+ (amountConsumed / ((System.currentTimeMillis() - runningTime) / 1000)));
+							//System.out.println("AIPACKETS: " + AIPackets + " verse " + "PLAYERPACKETS: " + PLAYERPackets + " DIFFERENCE: " + (AIPackets - PLAYERPackets));
 						}
 					}
 				} catch(InterruptedException | IllegalBoundedBufferException e) {
@@ -220,8 +244,8 @@ public class MoveHandler implements Runnable {
 				if(bb == null) {
 					throw new IllegalBoundedBufferException("Illegal BoundedBuffer state");
 				} else {
-					while(!Game.game_over) {
-						this.delay(Game.speed);
+					while(Game.running) {
+						this.delay(200);
 						if(playerList.size() > 0) {
 							for(int i = 0; i<playerList.size(); i++) {
 								if(playerList.get(i) != null) {
@@ -246,6 +270,7 @@ public class MoveHandler implements Runnable {
 				e.printStackTrace();
 			}
 		}
+		System.out.println(Thread.currentThread().getName() + " " + this.role.toString() + " is exitting. . . ");
 	}
 	public void delay(long milliseconds) {
 		try {

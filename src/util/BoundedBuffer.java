@@ -67,4 +67,7 @@ public class BoundedBuffer {
 	public void setMaxSize(int newMaxSize) {
 		this.maxSize = newMaxSize;
 	}
+	public String toString() {
+		return dataStorage.toString();
+	}
 }

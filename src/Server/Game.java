@@ -16,11 +16,15 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import util.BoundedBuffer;
 import util.MovePacket;
+import util.Snake;
 
 public class Game implements KeyListener, WindowListener {
 	// KEYS MAP
@@ -35,9 +39,9 @@ public class Game implements KeyListener, WindowListener {
 	public final static int BIG_FOOD_BONUS = 3;
 	public final static int SNAKE = 4;
 	public final static int SNAKE_HEAD=5;
+	public final static int PLAYER_SNAKE_HEAD=6;
 	public static int[][] grid = null;
 	private static Snake snake;
-	private ArrayList<Snake> snakeList;
 	public int counter = 0;
 	private int direction = 1;
 	private int height = 600;
@@ -46,19 +50,20 @@ public class Game implements KeyListener, WindowListener {
 	Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 	int screenSize = (int) (dim.height * 0.5);
 	private static int gameSize = 40;
-	public static long speed = 300;
+	public static long speed = 10;
 	private Frame frame = null;
 	private Canvas canvas = null;
 	private Graphics graph = null;
 	private BufferStrategy strategy = null;
 	public static boolean game_over = false;
-	private boolean paused = false;
-	private int grow = 0;
-	private long cycleTime = 0;
-	private long sleepTime = 0;
-	private int bonusTime = 0;
-	private boolean running = true;
+	public static boolean paused = false;
+	public static boolean running = true;
 	private BoundedBuffer bb;
+	private ArrayList<Snake> snakeList;
+
+	Thread p1;
+	Thread c1;
+	ExecutorService e;
 	/**
 	 * @param args
 	 * the command line arguments
@@ -67,20 +72,52 @@ public class Game implements KeyListener, WindowListener {
 	public Game(BoundedBuffer BB) {
 		//super();
 		this.bb = BB;
+		int processors = Runtime.getRuntime().availableProcessors() * 2;
+
+		e = Executors.newFixedThreadPool(processors);	
 		frame = new Frame();
 		canvas = new Canvas();
 		grid = new int[gameSize][gameSize];
 		snake = new Snake("The Player", false);
 		snake.enemysnake = new int[gameSize * gameSize][2];
 		this.snakeList = new ArrayList<Snake>();
-		snakeList.add(this.snake);
-		for(int i = 0; i<10; i++) {
-			this.createPlayer();
+		this.createPlayer(100);
+		this.createPlayer();
+
+		this.startServers();
+
+	}
+	public void startServers() {
+		if(p1 == null) {
+			p1 = new Thread(new MoveHandler(bb, MoveHandler.Role.PRODUCER, this.snakeList), "p1");
+			e.submit(p1);
 		}
-		Thread p1 = new Thread(new MoveHandler(bb, MoveHandler.Role.PRODUCER, this.snakeList), "p1");
-		Thread c1 = new Thread(new MoveHandler(bb, MoveHandler.Role.CONSUMER, this.snakeList), "c1");
-		p1.start();
-		c1.start();
+		if(c1 == null) {
+			c1 = new Thread(new MoveHandler(bb, MoveHandler.Role.CONSUMER, this.snakeList), "c1");
+			e.submit(c1);
+		}
+
+	}
+	public void createPlayer() {
+		
+		snakeList.add(this.snake);
+
+		for (int i = 0; i < gameSize * gameSize; i++) {
+			snake.enemysnake[i][0] = -1;
+			snake.enemysnake[i][1] = -1;
+		}
+		snake.enemysnake[0][0] = gameSize/2;
+		snake.enemysnake[0][1] = gameSize/2;
+		grid[gameSize/2][gameSize/2] = PLAYER_SNAKE_HEAD;
+
+		
+		snake.alive = true;
+	}
+	public void createPlayer(int amount) {
+		for(int i = 0; i<=amount; i++) {
+			this.snakeList.add(new Snake("AI Snake "+(snakeList.size()+1), true));
+		}
+
 	}
 	public void init() {
 		frame.setSize(screenSize, screenSize);
@@ -115,8 +152,35 @@ public class Game implements KeyListener, WindowListener {
 			/*for (int i=0; i<snakeList.size(); i++) {
 				System.out.println("Array index("+i+")"+snakeList.get(i));
 			}*/
+
+//			if(this.snakeList.contains(snake)) {
+//				if(!this.snakeList.get(0).alive) {
+//					if(!snake.IsAI) {
+//						for(int i = 0; i<snakeList.size(); i++) {
+//							System.out.println(snakeList.get(i).toString());
+//						}
+//					}
+//				}
+//				if(this.snakeList.get(snakeList.indexOf(snake)) == null) {
+//					System.out.println("Attempting to add back the player.");
+//					th
+//					this.createPlayer();
+//				}	
+//			} else {
+//				System.out.println("Attempting to add back the player.");
+//				this.createPlayer();
+//			}
+			int x = this.snakeList.indexOf(snake);
+			if(x == -1) {				
+				System.out.println("right . . . . . .");
+				this.createPlayer();
+			} else {
+				if(!this.snakeList.get(x).alive) {
+					System.out.println("huh...");
+					this.snakeList.remove(x);
+				}
+			}
 			counter += 1;
-			cycleTime = System.currentTimeMillis();
 			//System.out.println(counter);
 			/*System.out.println(counter);
 			System.out.println("Thread:"+Thread.currentThread().getName());
@@ -127,46 +191,32 @@ public class Game implements KeyListener, WindowListener {
 			//System.out.println(game_over);
 			//Spawn a new enemy snake every 10sec
 			/*if (counter%10 == 0) {
-				this.createPlayer();x=
+				this.createPlayer();
 			}*/
-			
+//			for (int h = 0; h<grid.length; h++) {
+//				for (int k=0; k<grid.length; k++) {
+//					System.out.print(grid[h][k]+" ");
+//					System.out.print(grid[k][h]+" ");
+//				}
+//				System.out.println();
+//			}
 			//At 10sec mark spawn 20 snakes
 			//System.out.println("thread:"+Thread.activeCount());
-			Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
-			Thread[] threadArray = threadSet.toArray(new Thread[threadSet.size()]);
-			//for (int i=0; i<Thread.activeCount(); i++) {
-			for (Thread t:Server.getPlayers()) {
-				if (t.isAlive() && t.toString().contains("thread")) {
-					//System.out.println("current thread:"+t.getName());
-				}
-			}
-			
+//			Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+//			Thread[] threadArray = threadSet.toArray(new Thread[threadSet.size()]);
+//			//for (int i=0; i<Thread.activeCount(); i++) {
+//			for (Thread t:Server.getPlayers()) {
+//				if (t.isAlive() && t.toString().contains("thread")) {
+//					System.out.println("current thread:"+t.getName());
+//				}
+//			}
+//			
 
 			renderGame();
 
 		}
 	}
-	public void createPlayer() {
-//		Thread thread = new Thread(new Snake("Thread-"+playerCount()+""));
-//		thread.setName("Thread-"+playerCount()+"");
-//		thread.start();
 
-		this.snakeList.add(new Snake(""+(snakeList.size()+1), true));
-		
-		/*Thread thread = new Thread("Thread-"+playerCount()+"");
-		System.out.println("Created player:"+thread.getName());
-		thread.run();*/
-		/*e.submit(new Thread(new testProducer(bb), "p-"+playerCount()+""));
-		e.submit(new Thread(new testConsumer(bb), "c-"+playerCount()+""));
-		try {
-			System.out.println("Move loc:"+bb.get().getXMove());
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
-		}*/
-		
-		//e.submit(new Thread(new testProducer(bb), "p1"));
-		//e.submit(new Thread(new testConsumer(bb), "c1"));
-	}
 	private void initGame() {
 		// Initialise tabs
 		for (int i = 0; i < gameSize; i++) {
@@ -174,13 +224,6 @@ public class Game implements KeyListener, WindowListener {
 				grid[i][j] = EMPTY;
 			}
 		}
-		for (int i = 0; i < gameSize * gameSize; i++) {
-			snake.enemysnake[i][0] = -1;
-			snake.enemysnake[i][1] = -1;
-		}
-		snake.enemysnake[0][0] = gameSize/2;
-		snake.enemysnake[0][1] = gameSize/2;
-		grid[gameSize/2][gameSize/2] = SNAKE_HEAD;
 		for (int i=0; i<100;i++) {
 			placeBonus(FOOD_BONUS);
 		}
@@ -240,6 +283,11 @@ public class Game implements KeyListener, WindowListener {
 									* gridUnit + gridUnit / 4, gridUnit / 2,
 									gridUnit / 2);
 							break;
+						case PLAYER_SNAKE_HEAD:
+							graph.setColor(new Color(255,0,0));
+							graph.fillOval(i * gridUnit, j * gridUnit,
+									gridUnit, gridUnit);
+							break;
 						default:
 							break;
 						}
@@ -284,8 +332,6 @@ public class Game implements KeyListener, WindowListener {
 			grid[x][y] = bonus_type;
 			//grid[x+1][y] = bonus_type;
 			//grid[x+2][y] = bonus_type;
-		} else {
-			placeBonus(bonus_type);
 		}
 	}
 	public static void placeBonusAtLoc(int bonus_type, int x, int y) {
@@ -303,32 +349,31 @@ public class Game implements KeyListener, WindowListener {
 		int code = ke.getKeyCode();
 		Dimension dim;
 		// System.out.println("Key pressed" + ke.toString());
-		paused = false;
 		switch (code) {
 		case KeyEvent.VK_UP:
 			if (snake.direction != DOWN) {
 				snake.direction = UP;
-				System.out.println("Player's direction changed to UP");
+				//System.out.println("Player's direction changed to UP");
 			}
 			break;
 		case KeyEvent.VK_DOWN:
 			if (snake.direction != UP) {
 				snake.direction = DOWN;
-				System.out.println("Player's direction changed to DOWN");
+				//System.out.println("Player's direction changed to DOWN");
 
 			}
 			break;
 		case KeyEvent.VK_LEFT:
 			if (snake.direction != RIGHT) {
 				snake.direction = LEFT;
-				System.out.println("Player's direction changed to LEFT");
+				//System.out.println("Player's direction changed to LEFT");
 
 			}
 			break;
 		case KeyEvent.VK_RIGHT:
 			if (snake.direction != LEFT) {
 				snake.direction = RIGHT;
-				System.out.println("Player's direction changed to RIGHT");
+				//System.out.println("Player's direction changed to RIGHT");
 
 			}
 			break;
@@ -362,10 +407,11 @@ public class Game implements KeyListener, WindowListener {
 			running = false;
 			System.exit(0);
 			break;
-		case KeyEvent.VK_SPACE:
-			if(!game_over)
-				paused = true;
-			break;
+//		case KeyEvent.VK_SPACE:
+//			if(!game_over) {
+//
+//			}
+//			break;
 		default:
 			// Unsupported key
 			break;
