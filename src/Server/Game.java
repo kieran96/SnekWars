@@ -1,6 +1,7 @@
 package Server;
 
 
+import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -8,6 +9,9 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
@@ -22,6 +26,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.swing.JFrame;
+
 import util.BoundedBuffer;
 import util.MovePacket;
 import util.Snake;
@@ -48,10 +55,10 @@ public class Game implements KeyListener, WindowListener {
 	private int width = 600;
 	//Code to make sizeable game based on screensize
 	Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-	int screenSize = (int) (dim.height * 0.5);
-	private static int gameSize = 40;
+	int screenSize = (int) (dim.height * 0.6);
+	private static int gameSize = 82;
 	public static long speed = 10;
-	private Frame frame = null;
+	private JFrame frame = null;
 	private Canvas canvas = null;
 	private Graphics graph = null;
 	private BufferStrategy strategy = null;
@@ -75,7 +82,9 @@ public class Game implements KeyListener, WindowListener {
 		int processors = Runtime.getRuntime().availableProcessors() * 2;
 
 		e = Executors.newFixedThreadPool(processors);	
-		frame = new Frame();
+		frame = new JFrame();
+		GridBagLayout g = new GridBagLayout();
+		frame.setLayout(g);
 		canvas = new Canvas();
 		grid = new int[gameSize][gameSize];
 		snake = new Snake("The Player", false);
@@ -121,10 +130,14 @@ public class Game implements KeyListener, WindowListener {
 	}
 	public void init() {
 		frame.setSize(screenSize, screenSize);
-		frame.setResizable(false);
+		frame.setResizable(true);
 		frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
-		canvas.setSize(screenSize, screenSize);
-		frame.add(canvas);
+		frame.setBackground(Color.blue);
+		canvas.setSize(screenSize-50, screenSize-50);
+		GridBagConstraints c = new GridBagConstraints();
+		c.anchor = GridBagConstraints.CENTER;
+		c.fill = GridBagConstraints.CENTER;
+		frame.add(canvas, c);
 		canvas.addKeyListener(this);
 		frame.addWindowListener(this);
 		frame.dispose();

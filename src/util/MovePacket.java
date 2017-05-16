@@ -1,6 +1,6 @@
 package util;
 
-import Server.Snake;
+import util.Snake;
 
 public class MovePacket {
 	private int[][] moveLocation;
