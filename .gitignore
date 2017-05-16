@@ -1,3 +1,9 @@
 
 *.class
 /bin/
+
+testdb
+
+*.p
+
+*.t
