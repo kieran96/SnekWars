@@ -56,7 +56,7 @@ public class Game implements KeyListener, WindowListener {
 	//Code to make sizeable game based on screensize
 	Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 	int screenSize = (int) (dim.height * 0.6);
-	private static int gameSize = 82;
+	private static int gameSize = 81;
 	public static long speed = 10;
 	private JFrame frame = null;
 	private Canvas canvas = null;
