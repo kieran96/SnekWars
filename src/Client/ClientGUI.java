@@ -30,7 +30,9 @@ public class ClientGUI {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		//If password is correct run rest of game.
 		if (loginServer1.login(received)) {
+			System.out.println("Username/Password match.");
 			Thread mainTester = new Thread(new Server(Server.Type.PRODUCTION));
 			mainTester.start();
 		} else {
