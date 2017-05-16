@@ -1,10 +1,9 @@
 package Server;
 
-import java.util.concurrent.Callable;
 
 import util.LoginPacket;
 
-public class Login implements Callable {
+public class Login {
 	/*
 	 * Currently i want the gui to set the username and password for its login thread and
 	 * then add the login thread to a queue to get called upon in the server to check if login is valid
@@ -16,12 +15,10 @@ public class Login implements Callable {
 	}
 	
 	//Login packet shit
-	@Override
-	public LoginPacket call() throws Exception {
+	public LoginPacket send() {
 		// I want this to call upon the instance of LoginServer created within server or main thread and
 		// have it added to BoundedBuffer so that one one login request can be processed by the LoginServer at a time.
 		
-		//TODO should return a LoginPacket datatype containing Username and Password.
 		return new LoginPacket(username, password);
 		//return false;
 	}

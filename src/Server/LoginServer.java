@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
+import util.LoginPacket;
+
 public class LoginServer implements Runnable{	
 	DB db = DBMaker.newFileDB(new File("testdb"))
             .closeOnJvmShutdown()
@@ -31,10 +33,13 @@ public class LoginServer implements Runnable{
 	 * @see Server.java
 	 */
 	public boolean login(String username, String password) {
-		if (users.get(username).equals(password)) {
+		if (users.get(username) != null && users.get(username).equals(password)) {
 			return true;
 		}
 		return false;
+	}
+	public boolean login(LoginPacket l) {
+		return login(l.getUsername(), l.getPassword());
 	}
 
 	@Override
