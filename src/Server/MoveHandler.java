@@ -9,7 +9,7 @@ import util.Snake;
 import java.util.ArrayList;
 
 public class MoveHandler implements Runnable {
-	private BoundedBuffer bb;
+	private BoundedBuffer<MovePacket> bb;
 	static int amountProduced = 0;
 	static double amountConsumed = 0;
 	long runningTime = System.currentTimeMillis();
@@ -19,7 +19,7 @@ public class MoveHandler implements Runnable {
 	ArrayList<Snake> playerList;
 
 
-	public MoveHandler(BoundedBuffer bb, Role role, ArrayList<Snake> playerList) {
+	public MoveHandler(BoundedBuffer<MovePacket> bb, Role role, ArrayList<Snake> playerList) {
 		this.bb = bb;
 		this.role = role;
 		this.playerList = playerList;
@@ -29,10 +29,10 @@ public class MoveHandler implements Runnable {
 				+ this.playerList.size());
 
 	}
-	public synchronized BoundedBuffer getBb() {
+	public synchronized BoundedBuffer<MovePacket> getBb() {
 		return bb;
 	}
-	public synchronized void setBb(BoundedBuffer bb) {
+	public synchronized void setBb(BoundedBuffer<MovePacket> bb) {
 		this.bb = bb;
 	}
 	public synchronized Role getRole() {

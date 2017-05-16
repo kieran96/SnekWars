@@ -6,17 +6,18 @@ import java.util.ArrayList;
  * Working from the sudo code found here: 
  * https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem#Using_monitors
  * @author Mitchell
+ * @param <T>
  *
  */
-public class BoundedBuffer {
+public class BoundedBuffer<T> {
 	private int maxSize;
 	private int currentPackets = 0;
 	
-	private List<MovePacket> dataStorage;
+	private List<T> dataStorage;
 	
 	public BoundedBuffer(int initSize) {
 		this.maxSize = initSize;
-		dataStorage = new ArrayList<MovePacket>(initSize);
+		dataStorage = new ArrayList<T>(initSize);
 	}
 	/**
 	 * Get a MovePacket.java from the BoundedBuffer.
@@ -24,7 +25,7 @@ public class BoundedBuffer {
 	 * @throws InterruptedException 
 	 * @see MovePacket
 	 */
-	public synchronized MovePacket get() throws InterruptedException {
+	public synchronized T get() throws InterruptedException {
 		while(isEmpty()) {
 			//System.out.println(Thread.currentThread().toString() + " is trying to access the BoundedBuffer, to get; but is empty . . .");
 			this.wait();
@@ -39,7 +40,7 @@ public class BoundedBuffer {
 		this.notifyAll();
 		return this.dataStorage.remove(0);
 	}
-	public synchronized void put(MovePacket mp) throws InterruptedException {
+	public synchronized void put(T mp) throws InterruptedException {
 		while(this.currentPackets == this.maxSize) {
 			System.out.println(Thread.currentThread().toString() + " is trying to access the BoundedBuffer, to put; but is full. . .");
 			this.wait();
