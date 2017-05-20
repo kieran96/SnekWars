@@ -284,6 +284,9 @@ public class Game implements KeyListener, WindowListener {
 			running = false;
 			System.exit(0);
 		}
+		if(move.getKey() == KeyEvent.VK_SPACE) {
+			paused = !paused;
+		}
 		Dimension dim;
 		//Send the KeyEvent to the snake, so it may handle.
 		for(Snake snake : humanPlayers) {
