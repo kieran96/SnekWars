@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 import javax.swing.JFrame;
 
 import util.BoundedBuffer;
+import util.MoveKey;
 import util.MovePacket;
 import util.Snake;
 
@@ -48,7 +49,6 @@ public class Game implements KeyListener, WindowListener {
 	public final static int SNAKE_HEAD=5;
 	public final static int PLAYER_SNAKE_HEAD=6;
 	public static int[][] grid = null;
-	private static Snake snake;
 	public int counter = 0;
 	private int direction = 1;
 	private int height = 600;
@@ -67,16 +67,12 @@ public class Game implements KeyListener, WindowListener {
 	public static boolean running = true;
 	private BoundedBuffer bb;
 	private ArrayList<Snake> snakeList;
+	private ArrayList<Snake> humanPlayers;
 
 	Thread p1;
 	Thread c1;
 	ExecutorService e;
-	/**
-	 * @param args
-	 * the command line arguments
-	 */
-
-	public Game(BoundedBuffer BB) {
+	public Game(BoundedBuffer BB, ArrayList<Snake> players) {
 		//super();
 		this.bb = BB;
 		int processors = Runtime.getRuntime().availableProcessors() * 2;
@@ -87,11 +83,11 @@ public class Game implements KeyListener, WindowListener {
 		frame.setLayout(g);
 		canvas = new Canvas();
 		grid = new int[gameSize][gameSize];
-		snake = new Snake("The Player", false);
-		snake.enemysnake = new int[gameSize * gameSize][2];
+
+		this.humanPlayers = players;
+
 		this.snakeList = new ArrayList<Snake>();
-		this.createPlayer(100);
-		this.createPlayer();
+		this.createPlayersHuman();
 
 		this.startServers();
 
@@ -107,26 +103,16 @@ public class Game implements KeyListener, WindowListener {
 		}
 
 	}
-	public void createPlayer() {
-		
-		snakeList.add(this.snake);
-
-		for (int i = 0; i < gameSize * gameSize; i++) {
-			snake.enemysnake[i][0] = -1;
-			snake.enemysnake[i][1] = -1;
+	public void createPlayersHuman() {
+		for(Snake snake : humanPlayers) {
+			snake.createSnake();
+			snakeList.add(snake);
 		}
-		snake.enemysnake[0][0] = gameSize/2;
-		snake.enemysnake[0][1] = gameSize/2;
-		grid[gameSize/2][gameSize/2] = PLAYER_SNAKE_HEAD;
-
-		
-		snake.alive = true;
 	}
-	public void createPlayer(int amount) {
+	public void createPlayersAI(int amount) {
 		for(int i = 0; i<=amount; i++) {
 			this.snakeList.add(new Snake("AI Snake "+(snakeList.size()+1), true));
 		}
-
 	}
 	public void init() {
 		frame.setSize(screenSize, screenSize);
@@ -161,72 +147,16 @@ public class Game implements KeyListener, WindowListener {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			//work here
-			/*for (int i=0; i<snakeList.size(); i++) {
-				System.out.println("Array index("+i+")"+snakeList.get(i));
-			}*/
-
-//			if(this.snakeList.contains(snake)) {
-//				if(!this.snakeList.get(0).alive) {
-//					if(!snake.IsAI) {
-//						for(int i = 0; i<snakeList.size(); i++) {
-//							System.out.println(snakeList.get(i).toString());
-//						}
-//					}
-//				}
-//				if(this.snakeList.get(snakeList.indexOf(snake)) == null) {
-//					System.out.println("Attempting to add back the player.");
-//					th
-//					this.createPlayer();
-//				}	
-//			} else {
-//				System.out.println("Attempting to add back the player.");
-//				this.createPlayer();
+//			counter++;
+//			if (counter == 100) {
+//				this.createPlayersAI(100);
 //			}
-			int x = this.snakeList.indexOf(snake);
-			if(x == -1) {				
-				System.out.println("right . . . . . .");
-				this.createPlayer();
-			} else {
-				if(!this.snakeList.get(x).alive) {
-					System.out.println("huh...");
-					this.snakeList.remove(x);
+			renderGame();
+			for(int i = 0;i<humanPlayers.size(); i++) {
+				if(!humanPlayers.get(i).alive) {
+					humanPlayers.remove(i);
 				}
 			}
-			counter += 1;
-			//System.out.println(counter);
-			/*System.out.println(counter);
-			System.out.println("Thread:"+Thread.currentThread().getName());
-			System.out.println("Thread:"+Thread.activeCount());
-			if (counter == 10) {
-				Server.createPlayer();
-			}*/
-			//System.out.println(game_over);
-			//Spawn a new enemy snake every 10sec
-			/*if (counter%10 == 0) {
-				this.createPlayer();
-			}*/
-//			for (int h = 0; h<grid.length; h++) {
-//				for (int k=0; k<grid.length; k++) {
-//					System.out.print(grid[h][k]+" ");
-//					System.out.print(grid[k][h]+" ");
-//				}
-//				System.out.println();
-//			}
-			//At 10sec mark spawn 20 snakes
-			//System.out.println("thread:"+Thread.activeCount());
-//			Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
-//			Thread[] threadArray = threadSet.toArray(new Thread[threadSet.size()]);
-//			//for (int i=0; i<Thread.activeCount(); i++) {
-//			for (Thread t:Server.getPlayers()) {
-//				if (t.isAlive() && t.toString().contains("thread")) {
-//					System.out.println("current thread:"+t.getName());
-//				}
-//			}
-//			
-
-			renderGame();
-
 		}
 	}
 
@@ -240,16 +170,6 @@ public class Game implements KeyListener, WindowListener {
 		for (int i=0; i<100;i++) {
 			placeBonus(FOOD_BONUS);
 		}
-		/*for(Snake snake : this.snakeList) {
-			for (int i = 0; i < gameSize * gameSize; i++) {
-				snake.enemysnake[i][0] = -1;
-				snake.enemysnake[i][1] = -1;
-			}
-			snake.enemysnake[0][0] = gameSize/2;
-			snake.enemysnake[0][1] = gameSize/2;
-			grid[gameSize/2][gameSize/2] = SNAKE_HEAD;
-			//placeBonus(FOOD_BONUS);
-		}*/
 	}
 	private void renderGame() {
 		int gridUnit = screenSize / gameSize;
@@ -326,12 +246,12 @@ public class Game implements KeyListener, WindowListener {
 	}
 	public static int getScore() {
 		int score = 0;
-		for (int i = 0; i < gameSize * gameSize; i++) {
-			if ((snake.enemysnake[i][0] < 0) || (snake.enemysnake[i][1] < 0)) {
-				break;
-			}
-			score++;
-		}
+//		for (int i = 0; i < gameSize * gameSize; i++) {
+//			if ((snake.boardLocation[i][0] < 0) || (snake.boardLocation[i][1] < 0)) {
+//				break;
+//			}
+//			score++;
+//		}
 		return score;
 	}
 	
@@ -359,76 +279,59 @@ public class Game implements KeyListener, WindowListener {
 	}
 	// / IMPLEMENTED FUNCTIONS
 	public void keyPressed(KeyEvent ke) {
-		int code = ke.getKeyCode();
-		Dimension dim;
-		// System.out.println("Key pressed" + ke.toString());
-		switch (code) {
-		case KeyEvent.VK_UP:
-			if (snake.direction != DOWN) {
-				snake.direction = UP;
-				//System.out.println("Player's direction changed to UP");
-			}
-			break;
-		case KeyEvent.VK_DOWN:
-			if (snake.direction != UP) {
-				snake.direction = DOWN;
-				//System.out.println("Player's direction changed to DOWN");
-
-			}
-			break;
-		case KeyEvent.VK_LEFT:
-			if (snake.direction != RIGHT) {
-				snake.direction = LEFT;
-				//System.out.println("Player's direction changed to LEFT");
-
-			}
-			break;
-		case KeyEvent.VK_RIGHT:
-			if (snake.direction != LEFT) {
-				snake.direction = RIGHT;
-				//System.out.println("Player's direction changed to RIGHT");
-
-			}
-			break;
-		case KeyEvent.VK_F11:
-			dim = Toolkit.getDefaultToolkit().getScreenSize();
-			if ((height != dim.height - 50) || (width != dim.height - 50)) {
-				height = dim.height - 50;
-				width = dim.height - 50;
-			} else {
-				height = 600;
-				width = 600;
-			}
-			frame.setSize(width + 7, height + 27);
-			canvas.setSize(width + 7, height + 27);
-			canvas.validate();
-			frame.validate();
-			break;
-			/*
-			 * case KeyEvent.VK_F12: dim =
-			 * Toolkit.getDefaultToolkit().getScreenSize(); if((height !=
-			 * dim.height) || (width != dim.width)) {
-			 *
-			 * frame.setVisible(false); //frame.setUndecorated(true);
-			 * frame.setVisible(true);
-			 * GraphicsEnvironment.getLocalGraphicsEnvironment
-			 * ().getDefaultScreenDevice().setFullScreenWindow(frame);
-			 *
-			 * } break;
-			 */
-		case KeyEvent.VK_ESCAPE:
+		MoveKey move = new MoveKey(ke.getKeyCode());
+		if(move.getKey() == KeyEvent.VK_ESCAPE) {
 			running = false;
 			System.exit(0);
-			break;
-//		case KeyEvent.VK_SPACE:
-//			if(!game_over) {
-//
-//			}
-//			break;
-		default:
-			// Unsupported key
-			break;
 		}
+		Dimension dim;
+		//Send the KeyEvent to the snake, so it may handle.
+		for(Snake snake : humanPlayers) {
+			for(MoveKey key : snake.moveSet.getMoveSet()) {
+				if(key.equals(move)) {
+					snake.updateMove(move);
+				}
+			}
+		}
+//		case KeyEvent.VK_F11:
+//			dim = Toolkit.getDefaultToolkit().getScreenSize();
+//			if ((height != dim.height - 50) || (width != dim.height - 50)) {
+//				height = dim.height - 50;
+//				width = dim.height - 50;
+//			} else {
+//				height = 600;
+//				width = 600;
+//			}
+//			frame.setSize(width + 7, height + 27);
+//			canvas.setSize(width + 7, height + 27);
+//			canvas.validate();
+//			frame.validate();
+//			break;
+//			/*
+//			 * case KeyEvent.VK_F12: dim =
+//			 * Toolkit.getDefaultToolkit().getScreenSize(); if((height !=
+//			 * dim.height) || (width != dim.width)) {
+//			 *
+//			 * frame.setVisible(false); //frame.setUndecorated(true);
+//			 * frame.setVisible(true);
+//			 * GraphicsEnvironment.getLocalGraphicsEnvironment
+//			 * ().getDefaultScreenDevice().setFullScreenWindow(frame);
+//			 *
+//			 * } break;
+//			 */
+//		case KeyEvent.VK_ESCAPE:
+//			running = false;
+//			System.exit(0);
+//			break;
+////		case KeyEvent.VK_SPACE:
+////			if(!game_over) {
+////
+////			}
+////			break;
+//		default:
+//			// Unsupported key
+//			break;
+//		}
 	}
 	public void windowClosing(WindowEvent we) {
 		running = false;

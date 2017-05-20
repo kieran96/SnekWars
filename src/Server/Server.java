@@ -2,7 +2,9 @@ package Server;
 
 
 import util.BoundedBuffer;
+import util.Snake;
 
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,6 +21,7 @@ public class Server implements Runnable{
 	Thread c1;
 	Thread c2;
 	BoundedBuffer bb;
+	ArrayList<Snake> players;
 	public enum Type {
 			TESTING, 
 			PRODUCTION
@@ -29,24 +32,11 @@ public class Server implements Runnable{
 	/**
 	 * Constructor for Server; 
 	 */
-	public Server() {
-		//TODO: Get back to me @Richard on how this login is going to run. Do I need to call .run()?
-		//TODO: How am I getting the information back from the LoginServer?				
-		//login
-		
-//		LoginServer login = new LoginServer();
-//		if(login.login()) {
-//			//allow for starting of the server.
-//			
-//		}
-		bb = new BoundedBuffer(50000);
-
-		
-	}
-	public Server(Type type) {
+	public Server(Type type, ArrayList<Snake> playerList) {
 		this.type = type;
 		System.out.println("Constructing server based on the logic of a " + this.type.toString() + " server");
 		bb = new BoundedBuffer(500);
+		this.players = playerList;
 	}
 	
 	public static Thread[] getPlayers() {
@@ -138,7 +128,7 @@ public class Server implements Runnable{
 //			}
 			
 		} else if(this.type == Type.PRODUCTION) {
-	        Game theGame = new Game(bb);
+	        Game theGame = new Game(bb, players);
 	        theGame.init();
 	        theGame.mainLoop();			
 		}

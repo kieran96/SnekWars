@@ -1,30 +1,21 @@
 package util;
 
-import java.awt.Canvas;
-import java.awt.Frame;
-import java.awt.Graphics;
-import java.awt.event.KeyEvent;
-import java.awt.image.BufferStrategy;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import Server.Game;
 
 public class Snake {
 	
 	//private int[][] grid = null;
-	public int[][] enemysnake = null;
+	public int[][] boardLocation = null;
 	public boolean alive = false;
-	public int counter = 0;
 	public int direction = 1; //FORCE LEFT
+	public int lastDirection = -1;
 	public int grow = 0;
 	public int headposX = -1;
 	public int headposY = -1;
 	public int bonusTime = 0;
+	public MoveSet moveSet;
 	public BoundedBuffer bb;
 	public String name = null;
 	public boolean IsAI;
@@ -34,30 +25,47 @@ public class Snake {
 		this.name = name;
 		this.IsAI = AIStatus;
 		System.out.println("Snake: " + name + " has been generated, is it AI: " + this.IsAI);
-		enemysnake = new int[Game.getGameSize() * Game.getGameSize()][2];
-		/*for (int i = 0; i < Game.getGameSize(); i++) {
-			for (int j = 0; j < Game.getGameSize(); j++) {
-				Game.grid[i][j] = EMPTY;
-			}
-		}*/
+		boardLocation = new int[Game.getGameSize() * Game.getGameSize()][2];
 		for (int i = 0; i < Game.getGameSize() * Game.getGameSize(); i++) {
-			enemysnake[i][0] = -1;
-			enemysnake[i][1] = -1;
+			boardLocation[i][0] = -1;
+			boardLocation[i][1] = -1;
 		}
-		//enemysnake[0][0] = Game.getGameSize()/2;
-		//enemysnake[0][1] = Game.getGameSize()/2;
-		//Game.grid[Game.getGameSize()/2][Game.getGameSize()/2] = SNAKE_HEAD;
 		Game.placeBonus(Game.FOOD_BONUS);
-		
 		createSnake();
+	}
+	public Snake(String name, MoveSet moveSet) {
+		this.name = name;
+		this.IsAI = false;
+		System.out.println("Snake: " + name + " has been generated, is it AI: " + this.IsAI);
+
+		this.moveSet = moveSet;
 	}
 	public Snake(Snake sn) {
 		this(sn.name, sn.IsAI);
-
-		System.out.println("Regenerating dead snake . . . ");
-
 	}
-	
+
+	public void updateMove(MoveKey key) {
+		if(key.getKey() == moveSet.getMoveSet()[0].getKey()) {
+			if (this.lastDirection != Game.DOWN) {
+					this.direction = Game.UP;
+			}
+		}
+		if(key.getKey() == moveSet.getMoveSet()[1].getKey()) {
+			if (this.lastDirection != Game.RIGHT) {
+				this.direction = Game.LEFT;
+			}
+		}
+		if(key.getKey() == moveSet.getMoveSet()[2].getKey()) {
+			if (this.lastDirection != Game.UP) {
+				this.direction = Game.DOWN;
+			}
+		}
+		if(key.getKey() == moveSet.getMoveSet()[3].getKey()) {
+			if (this.lastDirection != Game.LEFT) {
+				this.direction = Game.RIGHT;
+			}
+		}
+	}
 	public void newDirection() {
 		Random random = new Random();
 		int randomTick = random.nextInt(2);
@@ -89,18 +97,20 @@ public class Snake {
 		}
 	}
 
-	//actually appends to the board a new snake.
-	private void createSnake() {
+	public void createSnake() {
 		Random rand = new Random();
 		int randomX = rand.nextInt(Game.getGameSize());
 		int randomY = rand.nextInt(Game.getGameSize());
-		//enemysnake[0][0] = Game.getGameSize()/2;
-		//enemysnake[0][1] = Game.getGameSize()/2;
+		boardLocation = new int[Game.getGameSize() * Game.getGameSize()][2];
+		for (int i = 0; i < Game.getGameSize() * Game.getGameSize(); i++) {
+			boardLocation[i][0] = -1;
+			boardLocation[i][1] = -1;
+		}
 		headposX = randomX;
 		headposY = randomY;
-		enemysnake[0][0] = randomX;
-		enemysnake[0][1] = randomY;
-		if(IsAI == false) {
+		boardLocation[0][0] = randomX;
+		boardLocation[0][1] = randomY;
+		if(!IsAI) {
 			Game.grid[randomX][randomY] = Game.PLAYER_SNAKE_HEAD;
 		} else {
 			Game.grid[randomX][randomY] = Game.SNAKE_HEAD;			
@@ -109,22 +119,14 @@ public class Snake {
 		System.out.println("A snake spawned at: x:"+randomX+" & y:"+randomY);
 		alive = true;
 	}
-	public int getScore() {
-		int score = 0;
-		for (int i = 0; i < Game.getGameSize() * Game.getGameSize(); i++) {
-			if ((enemysnake[i][0] < 0) || (enemysnake[i][1] < 0)) {
-				break;
-			}
-			score++;
-		}
-		return score;
-	}
-
-	@Override 
+	/*
+		Utilities:
+	 */
+	@Override
 	public String toString() {
-		StringBuilder b = new StringBuilder();
-		b.append(this.name + " " + direction);
-		return b.toString();
+		String b;
+		b = (this.name + " " + direction);
+		return b;
 	}
 	@Override 
 	public int hashCode() {
@@ -147,7 +149,7 @@ public class Snake {
 			return false;
 		}
 		Snake nsnake = (Snake) obj;
-		if(this.hashCode() != obj.hashCode()) {
+		if(this.hashCode() != nsnake.hashCode()) {
 			return false;
 		}
 		return true;
