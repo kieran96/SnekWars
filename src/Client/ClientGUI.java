@@ -5,19 +5,72 @@ import Server.LoginServer;
 import Server.Server;
 import util.*;
 
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
-public class ClientGUI {
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+
+public class ClientGUI implements ActionListener{
 	//TODO Separate given Snake code which handles the gui
 	//TODO main(String[] args) should be moved to it's own class
+	
+	JFrame frame;
+	JPanel panel;
+	JLabel label1, label2;
+	JTextField username;
+	JPasswordField password;
+	JButton submit;
+	JLabel feedback;
+	
+	static String inputUsername = "Dicko";
+	static String inputPassword = "password123";
+	
+	public ClientGUI() {
+		frame = new JFrame();
+		frame.setSize(300, 100);
+		
+		panel = new JPanel();
+		panel.setLayout(new GridLayout(3,1));
+		label1 = new JLabel("Username");
+		label2 = new JLabel("Password");
+		username = new JTextField(15);
+		password = new JPasswordField(20);
+		submit = new JButton("Submit");
+		submit.addActionListener(this);
+		
+		panel.add(label1);
+		panel.add(username);
+		panel.add(label2);
+		panel.add(password);
+		panel.add(submit);
+		
+		frame.add(panel);
+		frame.setTitle("User Login");
+		frame.setVisible(true);
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		if (username.getText() == inputUsername && password.getPassword().toString() == inputPassword) {
+			
+		}
+			
+	}
+	
+	
+	
 	public static void main(String[] args) {
 		LoginServer loginServer1 = new LoginServer();
 		BoundedBuffer<LoginPacket> bb = new BoundedBuffer(10);
 		
-		
-		String inputUsername = "Dicko";
-		String inputPassword = "password123";
 		Login clientLogin = new Login();
 		clientLogin.setUsername(inputUsername);
 		clientLogin.setPassword(inputPassword);
@@ -43,8 +96,5 @@ public class ClientGUI {
 		} else {
 			System.out.println("Wrong Username and/or Password");
 		}
-		
-		
-		
 	}
 }
