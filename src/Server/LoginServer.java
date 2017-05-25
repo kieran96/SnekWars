@@ -27,6 +27,8 @@ public class LoginServer implements Runnable{
 		
 	}
 	
+	
+	//TODO registration method
 	/**
 	 * What the server will probably run when we create an instance of LoginServer from Server.java
 	 * @return True if login is OK and we should continue with loading server. False is not OK to start.

@@ -106,17 +106,32 @@ public class Snake {
 			boardLocation[i][0] = -1;
 			boardLocation[i][1] = -1;
 		}
-		headposX = randomX;
-		headposY = randomY;
-		boardLocation[0][0] = randomX;
-		boardLocation[0][1] = randomY;
-		if(!IsAI) {
-			Game.grid[randomX][randomY] = Game.PLAYER_SNAKE_HEAD;
+		if (name.equalsIgnoreCase("placeholder")) {
+			headposY = Game.getGameSize()/4;
+			headposX = Game.getGameSize()/2;
+			boardLocation[0][0] = Game.getGameSize()/4;
+			boardLocation[0][1] = Game.getGameSize()/2;
+			direction = 3;
+		} else if (name.equalsIgnoreCase("dicko")) {
+			headposY = Game.getGameSize() - Game.getGameSize()/4;
+			headposX = Game.getGameSize()/2;
+			boardLocation[0][0] = Game.getGameSize() - Game.getGameSize()/4;
+			boardLocation[0][1] = Game.getGameSize()/2;
+			direction = 2;
 		} else {
-			Game.grid[randomX][randomY] = Game.SNAKE_HEAD;			
+			headposX = randomX;
+			headposY = randomY;
+			boardLocation[0][0] = randomX;
+			boardLocation[0][1] = randomY;
 		}
+		
+//		if(!IsAI) {
+//			Game.grid[randomX][randomY] = Game.PLAYER_SNAKE_HEAD;
+//		} else {
+//			Game.grid[randomX][randomY] = Game.SNAKE_HEAD;			
+//		}
 		Game.placeBonus(Game.FOOD_BONUS);
-		System.out.println("A snake spawned at: x:"+randomX+" & y:"+randomY);
+		System.out.println("The snake: "+name+" spawned at: x:"+headposX+" & y:"+headposY);
 		alive = true;
 	}
 	/*

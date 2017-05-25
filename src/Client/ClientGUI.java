@@ -65,7 +65,7 @@ public class ClientGUI implements ActionListener{
 			
 	}
 	
-	
+	//TODO Add Login code to login GUI
 	
 	public static void main(String[] args) {
 		LoginServer loginServer1 = new LoginServer();

@@ -34,7 +34,7 @@ import util.MoveKey;
 import util.MovePacket;
 import util.Snake;
 
-public class Game implements KeyListener, WindowListener {
+public class Game implements KeyListener {
 	// KEYS MAP
 	public final static int UP = 0;
 	public final static int DOWN = 1;
@@ -56,7 +56,7 @@ public class Game implements KeyListener, WindowListener {
 	//Code to make sizeable game based on screensize
 	Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 	int screenSize = (int) (dim.height * 0.6);
-	private static int gameSize = 81;
+	private static int gameSize = 80;
 	public static long speed = 10;
 	private JFrame frame = null;
 	private Canvas canvas = null;
@@ -88,7 +88,7 @@ public class Game implements KeyListener, WindowListener {
 
 		this.snakeList = new ArrayList<Snake>();
 		this.createPlayersHuman();
-
+		this.createPlayersAI(100);
 		this.startServers();
 
 	}
@@ -100,10 +100,12 @@ public class Game implements KeyListener, WindowListener {
 		if(c1 == null) {
 			c1 = new Thread(new MoveHandler(bb, MoveHandler.Role.CONSUMER, this.snakeList), "c1");
 			e.submit(c1);
+			e.submit(new Thread(new MoveHandler(bb, MoveHandler.Role.CONSUMER, this.snakeList), "c2"));
 		}
-
+		
 	}
 	public void createPlayersHuman() {
+		int count = 0;
 		for(Snake snake : humanPlayers) {
 			snake.createSnake();
 			snakeList.add(snake);
@@ -125,17 +127,17 @@ public class Game implements KeyListener, WindowListener {
 		c.fill = GridBagConstraints.CENTER;
 		frame.add(canvas, c);
 		canvas.addKeyListener(this);
-		frame.addWindowListener(this);
 		frame.dispose();
 		frame.validate();
 		frame.setTitle("Snake");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
 		canvas.setIgnoreRepaint(true);
 		canvas.setBackground(Color.WHITE);
 		canvas.createBufferStrategy(2);
 		strategy = canvas.getBufferStrategy();
 		graph = strategy.getDrawGraphics();
-		initGame();
+		
 		renderGame();
 
 	}
@@ -151,26 +153,17 @@ public class Game implements KeyListener, WindowListener {
 //			if (counter == 100) {
 //				this.createPlayersAI(100);
 //			}
-			renderGame();
-			for(int i = 0;i<humanPlayers.size(); i++) {
-				if(!humanPlayers.get(i).alive) {
-					humanPlayers.remove(i);
+			for(Snake snake : this.humanPlayers) {
+				if(!snake.alive) {
+					snake.createSnake();
+					snakeList.add(snake);
 				}
 			}
+			renderGame();
+
 		}
 	}
 
-	private void initGame() {
-		// Initialise tabs
-		for (int i = 0; i < gameSize; i++) {
-			for (int j = 0; j < gameSize; j++) {
-				grid[i][j] = EMPTY;
-			}
-		}
-		for (int i=0; i<100;i++) {
-			placeBonus(FOOD_BONUS);
-		}
-	}
 	private void renderGame() {
 		int gridUnit = screenSize / gameSize;
 		canvas.paint(graph);
@@ -336,17 +329,7 @@ public class Game implements KeyListener, WindowListener {
 //			break;
 //		}
 	}
-	public void windowClosing(WindowEvent we) {
-		running = false;
-		System.exit(0);
-	}
 	// UNNUSED IMPLEMENTED FUNCTIONS
 	public void keyTyped(KeyEvent ke) {}
 	public void keyReleased(KeyEvent ke) {}
-	public void windowOpened(WindowEvent we) {}
-	public void windowClosed(WindowEvent we) {}
-	public void windowIconified(WindowEvent we) {}
-	public void windowDeiconified(WindowEvent we) {}
-	public void windowActivated(WindowEvent we) {}
-	public void windowDeactivated(WindowEvent we) {}
 }
