@@ -12,8 +12,9 @@ public class Snake {
 	public int direction = 1; //FORCE LEFT
 	public int lastDirection = -1;
 	public int grow = 0;
-	public int headposX = -1;
-	public int headposY = -1;
+	private int headposX = -1;
+	private int headposY = -1;
+	private int playerHead;
 	public int bonusTime = 0;
 	public MoveSet moveSet;
 	public BoundedBuffer bb;
@@ -36,9 +37,9 @@ public class Snake {
 	public Snake(String name, MoveSet moveSet) {
 		this.name = name;
 		this.IsAI = false;
-		System.out.println("Snake: " + name + " has been generated, is it AI: " + this.IsAI);
-
 		this.moveSet = moveSet;
+
+		System.out.println("Snake: " + name + " who is not an AI has the MoveSet:" + moveSet.toString());
 	}
 	public Snake(Snake sn) {
 		this(sn.name, sn.IsAI);
@@ -124,11 +125,11 @@ public class Snake {
 			boardLocation[0][0] = randomX;
 			boardLocation[0][1] = randomY;
 		}
-		
+
 //		if(!IsAI) {
 //			Game.grid[randomX][randomY] = Game.PLAYER_SNAKE_HEAD;
 //		} else {
-//			Game.grid[randomX][randomY] = Game.SNAKE_HEAD;			
+//			Game.grid[randomX][randomY] = Game.SNAKE_HEAD;
 //		}
 		Game.placeBonus(Game.FOOD_BONUS);
 		System.out.println("The snake: "+name+" spawned at: x:"+headposX+" & y:"+headposY);
@@ -137,10 +138,21 @@ public class Snake {
 	/*
 		Utilities:
 	 */
+	public void setHead(int index) {
+		this.playerHead = index;
+	}
+	public int getHead() {
+		return this.playerHead;
+	}
 	@Override
 	public String toString() {
 		String b;
-		b = (this.name + " " + direction);
+		if(this.moveSet != null) {
+			b = (this.name + " AI?: " + this.IsAI + " MoveSet: " + this.moveSet.toString());
+		} else {
+			b = (this.name + " AI?: " + this.IsAI + " MoveSet: null");
+
+		}
 		return b;
 	}
 	@Override 
@@ -164,9 +176,6 @@ public class Snake {
 			return false;
 		}
 		Snake nsnake = (Snake) obj;
-		if(this.hashCode() != nsnake.hashCode()) {
-			return false;
-		}
-		return true;
+		return (this.hashCode() == nsnake.hashCode());
 	}
 }

@@ -2,6 +2,8 @@ package util;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /**
  * Working from the sudo code found here: 
  * https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem#Using_monitors
@@ -17,7 +19,7 @@ public class BoundedBuffer<T> {
 	
 	public BoundedBuffer(int initSize) {
 		this.maxSize = initSize;
-		dataStorage = new ArrayList<T>(initSize);
+		dataStorage = new CopyOnWriteArrayList<T>();
 	}
 	/**
 	 * Get a MovePacket.java from the BoundedBuffer.
@@ -54,10 +56,13 @@ public class BoundedBuffer<T> {
 		this.dataStorage.add(mp);
 		
 		//Notify everyone that is waiting
-		this.notifyAll();
+		this.notify();
 	}
 	public boolean isEmpty() {
-		return ((this.currentPackets > 0) ? false : true);
+		return (this.currentPackets == 0);
+	}
+	public boolean hasNext() {
+		return !this.isEmpty();
 	}
 	public int getCurrentPacketsSize() {
 		return this.currentPackets;

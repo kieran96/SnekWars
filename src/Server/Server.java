@@ -2,9 +2,11 @@ package Server;
 
 
 import util.BoundedBuffer;
+import util.LoggingPacket;
 import util.Snake;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,21 +23,22 @@ public class Server implements Runnable{
 	Thread c1;
 	Thread c2;
 	BoundedBuffer bb;
-	ArrayList<Snake> players;
+	BoundedBuffer logger;
+	List<Snake> players;
+
 	public enum Type {
 			TESTING, 
 			PRODUCTION
 	};
 	Type type;
-	//TODO Create main loop from given pseudo code
-	//TODO Create thread handler and monitors for server threads.
 	/**
 	 * Constructor for Server; 
 	 */
-	public Server(Type type, ArrayList<Snake> playerList) {
+	public Server(Type type, List<Snake> playerList, BoundedBuffer<LoggingPacket> logger) {
+		this.logger = logger;
 		this.type = type;
 		System.out.println("Constructing server based on the logic of a " + this.type.toString() + " server");
-		bb = new BoundedBuffer(500);
+		bb = new BoundedBuffer(50000);
 		this.players = playerList;
 	}
 	
@@ -69,7 +72,6 @@ public class Server implements Runnable{
 		 * 	simulate the world
 		 * 	broadcast to all players
 		 */
-		//TODO: Need to start two threads here; One for the Player Fetching - One for GUI Updates.
 		int processors = Runtime.getRuntime().availableProcessors() * 2;
 		ExecutorService e = Executors.newFixedThreadPool(processors);	
 /*
@@ -128,7 +130,7 @@ public class Server implements Runnable{
 //			}
 			
 		} else if(this.type == Type.PRODUCTION) {
-	        Game theGame = new Game(bb, players);
+	        Game theGame = new Game(bb, logger, players);
 	        theGame.init();
 	        theGame.mainLoop();			
 		}

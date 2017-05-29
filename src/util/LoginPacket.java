@@ -18,4 +18,13 @@ public class LoginPacket {
 		return password;
 	}
 
+	@Override
+	public String toString() {
+		if(username != null) {
+			return username;
+		} else {
+			return "No Username Found.";
+		}
+	}
+
 }

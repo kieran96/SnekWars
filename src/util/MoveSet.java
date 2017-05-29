@@ -31,6 +31,14 @@ public class MoveSet {
             this.moves = newKeySet;
         }
     }
+    public boolean contains(MoveKey movekey) {
+        for(MoveKey key : this.getMoveSet()) {
+            if(key.equals(movekey)) {
+                return true;
+            }
+        }
+        return false;
+    }
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
@@ -38,7 +46,7 @@ public class MoveSet {
         for(MoveKey key: this.moves) {
             b.append(key.toString()).append(" ");
         }
-        return b.toString();
+        return b.toString().trim();
     }
     @Override
     public int hashCode() {

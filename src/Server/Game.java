@@ -19,9 +19,9 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferStrategy;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Set;
+
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -29,10 +29,7 @@ import java.util.logging.Logger;
 
 import javax.swing.JFrame;
 
-import util.BoundedBuffer;
-import util.MoveKey;
-import util.MovePacket;
-import util.Snake;
+import util.*;
 
 public class Game implements KeyListener {
 	// KEYS MAP
@@ -41,13 +38,16 @@ public class Game implements KeyListener {
 	public final static int LEFT = 2;
 	public final static int RIGHT = 3;
 	// GRID CONTENT
-	public final static int EMPTY = 0;
+	final static int EMPTY = 0;
 	public final static int FOOD_BONUS = 1;
-	public final static int FOOD_MALUS = 2;
 	public final static int BIG_FOOD_BONUS = 3;
-	public final static int SNAKE = 4;
+	final static int SNAKE = 4;
 	public final static int SNAKE_HEAD=5;
-	public final static int PLAYER_SNAKE_HEAD=6;
+	final static int PLAYER_ONE = 7;
+	final static int PLAYER_TWO = 8;
+	final static int PLAYER_THREE = 9;
+	final static int PLAYER_FOUR = 10;
+	private static int score;
 	public static int[][] grid = null;
 	public int counter = 0;
 	private int direction = 1;
@@ -57,22 +57,26 @@ public class Game implements KeyListener {
 	Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 	int screenSize = (int) (dim.height * 0.6);
 	private static int gameSize = 80;
-	public static long speed = 10;
+    static long speed = 10;
 	private JFrame frame = null;
 	private Canvas canvas = null;
 	private Graphics graph = null;
 	private BufferStrategy strategy = null;
-	public static boolean game_over = false;
+	static boolean game_over = false;
 	public static boolean paused = false;
 	public static boolean running = true;
-	private BoundedBuffer bb;
-	private ArrayList<Snake> snakeList;
-	private ArrayList<Snake> humanPlayers;
+	private BoundedBuffer<MovePacket> bb;
+	private BoundedBuffer<LoggingPacket> loggingPacketBoundedBuffer;
+	private List<Snake> snakeList;
+	private List<Snake> humanPlayers;
 
-	Thread p1;
-	Thread c1;
-	ExecutorService e;
-	public Game(BoundedBuffer BB, ArrayList<Snake> players) {
+    private Thread p1;
+    private Thread c1;
+    private Thread c2;
+    private Thread logger;
+    private ExecutorService e;
+
+	Game(BoundedBuffer<MovePacket> BB, BoundedBuffer<LoggingPacket> loggingPacketBoundedBuffer, List<Snake> players) {
 		//super();
 		this.bb = BB;
 		int processors = Runtime.getRuntime().availableProcessors() * 2;
@@ -85,38 +89,76 @@ public class Game implements KeyListener {
 		grid = new int[gameSize][gameSize];
 
 		this.humanPlayers = players;
+		this.loggingPacketBoundedBuffer = loggingPacketBoundedBuffer;
 
-		this.snakeList = new ArrayList<Snake>();
+		this.snakeList = new CopyOnWriteArrayList<Snake>();
 		this.createPlayersHuman();
-		this.createPlayersAI(100);
-		this.startServers();
+		//this.createPlayersAI(100, false);
+		this.startServers(false, 1, 7);
 
 	}
-	public void startServers() {
-		if(p1 == null) {
-			p1 = new Thread(new MoveHandler(bb, MoveHandler.Role.PRODUCER, this.snakeList), "p1");
-			e.submit(p1);
+	private void startServers(boolean usePool, int producerSize, int consumerSize) {
+		if(usePool) {
+			for(int i = 0; i<producerSize; i++) {
+				e.submit(new Thread(new MoveHandler(bb, loggingPacketBoundedBuffer, MoveHandler.Role.PRODUCER, this.snakeList), "p"+i));
+			}
+			for(int i = 0; i<consumerSize; i++) {
+				e.submit(new Thread(new MoveHandler(bb, loggingPacketBoundedBuffer, MoveHandler.Role.CONSUMER, this.snakeList), "c"+i));
+			}
+		} else {
+			if(p1 == null) {
+				p1 = new Thread(new MoveHandler(bb, loggingPacketBoundedBuffer, MoveHandler.Role.PRODUCER, this.snakeList), "p1");
+				p1.start();
+			}
+			if(c1 == null) {
+				c1 = new Thread(new MoveHandler(bb, loggingPacketBoundedBuffer, MoveHandler.Role.CONSUMER, this.snakeList), "c1");
+				c1.start();
+			}
+			if(c2 == null) {
+				c2 = new Thread(new MoveHandler(bb, loggingPacketBoundedBuffer, MoveHandler.Role.CONSUMER, this.snakeList), "c2");
+				c2.start();
+			}
 		}
-		if(c1 == null) {
-			c1 = new Thread(new MoveHandler(bb, MoveHandler.Role.CONSUMER, this.snakeList), "c1");
-			e.submit(c1);
-			e.submit(new Thread(new MoveHandler(bb, MoveHandler.Role.CONSUMER, this.snakeList), "c2"));
+		if(logger == null) {
+			e.submit(new Thread(new util.Logger(loggingPacketBoundedBuffer), "Logger_1"));
+//			e.submit(new Thread(new util.Logger(loggingPacketBoundedBuffer), "Logger_2"));
 		}
-		
+
 	}
-	public void createPlayersHuman() {
-		int count = 0;
-		for(Snake snake : humanPlayers) {
-			snake.createSnake();
-			snakeList.add(snake);
+	private void createPlayersHuman() {
+		for(int i = 7; i<7+humanPlayers.size(); i++) {
+			humanPlayers.get(i-7).createSnake();
+			humanPlayers.get(i-7).setHead(i);
+			snakeList.add(humanPlayers.get(i-7));
 		}
 	}
-	public void createPlayersAI(int amount) {
-		for(int i = 0; i<=amount; i++) {
-			this.snakeList.add(new Snake("AI Snake "+(snakeList.size()+1), true));
+    private void createPlayersAI(int amount, boolean useThreadedCreation) {
+		if(useThreadedCreation) {
+			Thread sc1 = new Thread(new MoveHandler(this.bb, loggingPacketBoundedBuffer, MoveHandler.Role.SNAKE_PRODUCER, amount, this.snakeList), "sc1");
+			Thread sc2 = new Thread(new MoveHandler(this.bb, loggingPacketBoundedBuffer, MoveHandler.Role.SNAKE_PRODUCER, amount, this.snakeList), "sc2");
+			Thread sc3 = new Thread(new MoveHandler(this.bb, loggingPacketBoundedBuffer, MoveHandler.Role.SNAKE_PRODUCER, amount, this.snakeList), "sc3");
+			Thread sc4 = new Thread(new MoveHandler(this.bb, loggingPacketBoundedBuffer, MoveHandler.Role.SNAKE_PRODUCER, amount, this.snakeList), "sc4");
+
+			sc1.start();
+			sc2.start();
+			sc3.start();
+			sc4.start();
+//			try {
+//				sc1.join();
+//				sc2.join();
+//				sc3.join();
+//				sc4.join();
+//			} catch (InterruptedException e1) {
+//				e1.printStackTrace();
+//			}
+
+		} else {
+			for(int i = 0; i<=amount; i++) {
+				this.snakeList.add(new Snake("AI Snake "+(snakeList.size()+1), true));
+			}
 		}
 	}
-	public void init() {
+    void init() {
 		frame.setSize(screenSize, screenSize);
 		frame.setResizable(true);
 		frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
@@ -137,11 +179,11 @@ public class Game implements KeyListener {
 		canvas.createBufferStrategy(2);
 		strategy = canvas.getBufferStrategy();
 		graph = strategy.getDrawGraphics();
-		
+
 		renderGame();
 
 	}
-	public void mainLoop() {
+    void mainLoop() {
 		while (running) {
 			try {
 				Thread.sleep(speed);
@@ -155,12 +197,16 @@ public class Game implements KeyListener {
 //			}
 			for(Snake snake : this.humanPlayers) {
 				if(!snake.alive) {
-					snake.createSnake();
+					try{
+						loggingPacketBoundedBuffer.put(new LoggingPacket("[Game] [Event] \t Added back the snake: " + snake.toString()));
+					} catch(Exception e) {
+						e.printStackTrace();
+					}
 					snakeList.add(snake);
-				}
+                    snake.createSnake();
+                }
 			}
 			renderGame();
-
 		}
 	}
 
@@ -176,46 +222,55 @@ public class Game implements KeyListener {
 				graph.setColor(Color.WHITE);
 				graph.fillRect(0, 0, screenSize, screenSize);
 				// Draw snake, bonus ...
-				int gridCase = EMPTY;
+				int gridCase;
 				for (int i = 0; i < gameSize; i++) {
 					for (int j = 0; j < gameSize; j++) {
 						gridCase = grid[i][j];
 						switch (gridCase) {
-						case SNAKE:
-							graph.setColor(new Color(17,14,218));
-							graph.fillOval(i * gridUnit, j * gridUnit,
-									gridUnit, gridUnit);
-							break;
-						case SNAKE_HEAD:
-							graph.setColor(new Color(0,0,0));
-							graph.fillOval(i * gridUnit, j * gridUnit,
-									gridUnit, gridUnit);
-							break;
-						case FOOD_BONUS:
-							graph.setColor(new Color(3,171,14));
-							graph.fillOval(i * gridUnit + gridUnit / 4, j
-									* gridUnit + gridUnit / 4, gridUnit / 2,
-									gridUnit / 2);
-							break;
-						case FOOD_MALUS:
-							graph.setColor(new Color(244,2,31));
-							graph.fillOval(i * gridUnit + gridUnit / 4, j
-									* gridUnit + gridUnit / 4, gridUnit / 2,
-									gridUnit / 2);
-							break;
-						case BIG_FOOD_BONUS:
-							graph.setColor(new Color(198,39,203));
-							graph.fillOval(i * gridUnit + gridUnit / 4, j
-									* gridUnit + gridUnit / 4, gridUnit / 2,
-									gridUnit / 2);
-							break;
-						case PLAYER_SNAKE_HEAD:
-							graph.setColor(new Color(255,0,0));
-							graph.fillOval(i * gridUnit, j * gridUnit,
-									gridUnit, gridUnit);
-							break;
-						default:
-							break;
+							case SNAKE:
+								graph.setColor(new Color(17, 14, 218));
+								graph.fillOval(i * gridUnit, j * gridUnit,
+										gridUnit, gridUnit);
+								break;
+							case SNAKE_HEAD:
+								graph.setColor(new Color(0, 0, 0));
+								graph.fillOval(i * gridUnit, j * gridUnit,
+										gridUnit, gridUnit);
+								break;
+							case FOOD_BONUS:
+								graph.setColor(new Color(3, 171, 14));
+								graph.fillOval(i * gridUnit + gridUnit / 4, j
+												* gridUnit + gridUnit / 4, gridUnit / 2,
+										gridUnit / 2);
+								break;
+							case BIG_FOOD_BONUS:
+								graph.setColor(new Color(198, 39, 203));
+								graph.fillOval(i * gridUnit + gridUnit / 4, j
+												* gridUnit + gridUnit / 4, gridUnit / 2,
+										gridUnit / 2);
+								break;
+							case PLAYER_ONE:
+								graph.setColor(new Color(26, 241, 193));
+								graph.fillOval(i * gridUnit, j * gridUnit,
+										gridUnit, gridUnit);
+								break;
+							case PLAYER_TWO:
+								graph.setColor(new Color(230, 195, 97));
+								graph.fillOval(i * gridUnit, j * gridUnit,
+										gridUnit, gridUnit);
+								break;
+							case PLAYER_THREE:
+								graph.setColor(new Color(170, 30, 36));
+								graph.fillOval(i * gridUnit, j * gridUnit,
+										gridUnit, gridUnit);
+								break;
+							case PLAYER_FOUR:
+								graph.setColor(new Color(103, 66, 34));
+								graph.fillOval(i * gridUnit, j * gridUnit,
+										gridUnit, gridUnit);
+								break;
+							default:
+								break;
 						}
 					}
 				}
@@ -275,6 +330,7 @@ public class Game implements KeyListener {
 		MoveKey move = new MoveKey(ke.getKeyCode());
 		if(move.getKey() == KeyEvent.VK_ESCAPE) {
 			running = false;
+			e.shutdown();
 			System.exit(0);
 		}
 		if(move.getKey() == KeyEvent.VK_SPACE) {
